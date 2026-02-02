@@ -1,0 +1,6 @@
+name,account_type,balance
+401k Retirement,pretax,250000.00
+Traditional IRA,pretax,50000.00
+Roth IRA,roth,75000.00
+Brokerage Account,taxable,100000.00
+Emergency Fund,cash,25000.00

@@ -1,0 +1,607 @@
+{
+  "metadata": {
+    "last_updated": "2026-02-01",
+    "description": "10-year investment return projections from major financial institutions for 2026",
+    "note": "Projections are nominal (not inflation-adjusted) unless otherwise noted. All percentages are annualized returns."
+  },
+  "projections": [
+    {
+      "institution": "Vanguard",
+      "as_of_date": "2026-01-22",
+      "source": "Vanguard Capital Markets Model® (VCMM)",
+      "forecast_horizon": "10 years",
+      "asset_classes": {
+        "equities": {
+          "us_equities": {
+            "index": "MSCI US Broad Market Index",
+            "projection": "3.9% - 5.9%",
+            "median": 4.9,
+            "notes": "Subdued long-term prospects due to stretched valuations. Base case: 4-5% annual returns. Bull case (AI succeeds): 8-10% (10% probability). Bear case (AI disappoints): -2% to 2% (3% probability)."
+          },
+          "global_equities_ex_us_unhedged": {
+            "index": "MSCI All Country World ex USA Index",
+            "projection": "Available in VCMM interactive tool",
+            "estimated": 6.0,
+            "notes": "Includes both developed and emerging markets. Vanguard expects international to outperform U.S. by roughly 1-2% annually."
+          },
+          "global_ex_us_developed_markets_unhedged": {
+            "index": "MSCI World ex-U.S. Equity Index",
+            "projection": "Available in VCMM interactive tool",
+            "estimated": 6.0,
+            "notes": "Vanguard explicitly favors non-U.S. developed markets. Expected to outperform U.S. stocks."
+          },
+          "emerging_markets_equities_unhedged": {
+            "index": "MSCI Emerging Market Equity Index",
+            "projection": "Available in VCMM interactive tool",
+            "estimated": 7.0,
+            "notes": "Higher return potential but with higher volatility than developed markets."
+          },
+          "us_value": {
+            "index": "Lowest one-third price/book ratio of Russell 1000 Index",
+            "projection": "Available in VCMM interactive tool",
+            "estimated": 5.5,
+            "notes": "Vanguard identifies U.S. value-oriented equities as one of strongest risk-return profiles. Estimated 0.5% premium over U.S. broad market."
+          },
+          "us_growth": {
+            "index": "Highest one-third price/book ratio of Russell 1000 Index",
+            "projection": "Available in VCMM interactive tool",
+            "estimated": 4.5,
+            "notes": "Growth stocks typically have lower expected returns than value in current valuation environment."
+          },
+          "us_large_cap": {
+            "index": "Highest one-third market cap of Russell 1000 Index",
+            "projection": "Available in VCMM interactive tool",
+            "estimated": 4.9,
+            "notes": "Similar to broad U.S. market given large-cap dominance."
+          },
+          "us_small_cap": {
+            "index": "Lowest two-thirds market cap of Russell 3000 Index",
+            "projection": "Available in VCMM interactive tool",
+            "estimated": 6.0,
+            "notes": "Small-cap premium historically ~1-1.5% over large-cap. Estimated 1.1% premium over U.S. broad market."
+          },
+          "us_reits": {
+            "index": "FTSE/NAREIT US Real Estate Index",
+            "projection": "Available in VCMM interactive tool",
+            "estimated": 5.5,
+            "notes": "Real estate investment trusts. Correlated with stocks but different risk profile."
+          }
+        },
+        "fixed_income": {
+          "us_aggregate_bonds": {
+            "index": "Bloomberg U.S. Aggregate Bond Index",
+            "projection": "3.8% - 4.8%",
+            "median": 4.3,
+            "notes": "Based on December 31, 2025 VCMM running. Yield-driven return expectations. Includes government and corporate bonds."
+          },
+          "global_bonds_ex_us_hedged": {
+            "index": "Bloomberg Global Aggregate ex-USD Index",
+            "projection": "Available in VCMM interactive tool",
+            "estimated": 4.0,
+            "notes": "International bonds hedged to USD. Slightly lower than U.S. aggregate due to currency hedging costs."
+          },
+          "us_treasury_bonds": {
+            "index": "Bloomberg U.S. Treasury Index",
+            "projection": "Available in VCMM interactive tool",
+            "estimated": 4.0,
+            "notes": "Broad Treasury index. Slightly below aggregate bonds due to no credit risk premium."
+          },
+          "us_short_term_treasury_bonds": {
+            "index": "Bloomberg U.S. 1-5-Year Treasury Bond Index",
+            "projection": "Available in VCMM interactive tool",
+            "estimated": 3.8,
+            "notes": "Short-term Treasuries (1-5 year maturity). Lower return but lower interest rate risk than intermediate/long-term."
+          },
+          "us_intermediate_term_treasury_bonds": {
+            "index": "Bloomberg U.S. Treasury: Intermediate Index",
+            "projection": "Available in VCMM interactive tool",
+            "estimated": 4.1,
+            "notes": "Intermediate-term Treasuries. Moderate duration risk."
+          },
+          "us_long_term_treasury_bonds": {
+            "index": "Bloomberg U.S. Treasury: Long Index",
+            "projection": "Available in VCMM interactive tool",
+            "estimated": 4.2,
+            "notes": "Long-term Treasuries. Higher duration risk but potentially higher returns."
+          },
+          "us_credit": {
+            "index": "Bloomberg U.S. Credit Index",
+            "projection": "Available in VCMM interactive tool",
+            "estimated": 4.6,
+            "notes": "Investment-grade corporate bonds. Credit spread over Treasuries typically 0.5-0.8%."
+          },
+          "us_high_yield_corporate": {
+            "index": "Bloomberg U.S. High Yield Corporate Bond Index",
+            "projection": "Available in VCMM interactive tool",
+            "estimated": 6.0,
+            "notes": "High-yield (junk) bonds. Higher return but with significant credit risk and volatility."
+          },
+          "emerging_markets_sovereign": {
+            "index": "Bloomberg Emerging Markets USD Sovereign Bond Index – 10% Country Capped",
+            "projection": "Available in VCMM interactive tool",
+            "estimated": 5.5,
+            "notes": "Emerging market sovereign bonds denominated in USD. Higher yield but with country/sovereign risk."
+          },
+          "us_tips": {
+            "index": "Bloomberg U.S. Treasury Inflation Protected Securities Index",
+            "projection": "Available in VCMM interactive tool",
+            "estimated": 4.0,
+            "notes": "Treasury Inflation-Protected Securities. Real yield component (~2%) plus inflation adjustment (~2%)."
+          },
+          "us_mortgage_backed_securities": {
+            "index": "Bloomberg U.S. Mortgage Backed Securities Index",
+            "projection": "Available in VCMM interactive tool",
+            "estimated": 4.2,
+            "notes": "Mortgage-backed securities. Similar to aggregate bonds but with prepayment risk."
+          },
+          "us_municipal_bonds": {
+            "index": "Bloomberg Municipal Bond Index",
+            "projection": "Available in VCMM interactive tool",
+            "estimated": 3.5,
+            "notes": "Municipal bonds. Lower nominal yield but tax-free for qualified investors."
+          },
+          "us_high_yield_municipal_bonds": {
+            "index": "Bloomberg Municipal Bond: High Yield Index",
+            "projection": "Available in VCMM interactive tool",
+            "estimated": 4.5,
+            "notes": "High-yield municipal bonds. Higher return than investment-grade munis but with credit risk."
+          },
+          "us_cash": {
+            "index": "U.S. 3-Month Treasury—constant maturity",
+            "projection": "Available in VCMM interactive tool",
+            "estimated": 3.5,
+            "notes": "Cash equivalents. Minimal risk, preserves capital. Yield follows Fed policy."
+          },
+          "us_municipal_cash": {
+            "index": "Bloomberg Municipal Short-Term Index",
+            "projection": "Available in VCMM interactive tool",
+            "estimated": 3.0,
+            "notes": "Short-term municipal securities. Tax-free cash alternative."
+          }
+        },
+        "commodities": {
+          "commodities": {
+            "index": "Bloomberg Commodity Index",
+            "projection": "Available in VCMM interactive tool",
+            "estimated": 5.0,
+            "notes": "Broad commodity index. High volatility. Useful for diversification due to negative correlation with stocks."
+          }
+        },
+        "other": {
+          "us_inflation": {
+            "index": "Consumer Price Index for all Urban Consumers (CPI-U)",
+            "projection": "Available in VCMM interactive tool",
+            "estimated": 2.5,
+            "notes": "Inflation expectation. Used for real return calculations."
+          }
+        }
+      },
+      "vcmm_notes": {
+        "interactive_tool": "Specific return projections for all asset classes are available in the interactive VCMM tool at the source URL",
+        "methodology": "VCMM uses Monte Carlo simulation (10,000 simulations per asset class) based on statistical analysis of historical data from 1960 onward",
+        "forecast_horizons": "10-year and 30-year projections available",
+        "updates": "Forecasts updated at least quarterly",
+        "volatility": "Volatility (standard deviation) projections also available in interactive tool"
+      },
+      "recommended_allocation": {
+        "stocks": "40%",
+        "bonds": "60%",
+        "notes": "2026 recommended portfolio allocation favors bonds over stocks"
+      },
+      "key_themes": [
+        "AI-led economic boom potential but muted equity returns",
+        "Stretched U.S. equity valuations",
+        "Preference for international and value stocks",
+        "Fixed income offers attractive risk-return profile"
+      ],
+      "source_url": "https://corporate.vanguard.com/content/corporatesite/us/en/corp/vemo/vemo-return-forecasts.html"
+    },
+    {
+      "institution": "Schwab",
+      "as_of_date": "2025-10-31",
+      "source": "Schwab's 2026 Long-Term Capital Market Expectations",
+      "forecast_horizon": "10 years (2026-2035)",
+      "asset_classes": {
+        "us_large_cap_equities": {
+          "projection": "5.9%",
+          "notes": "Down slightly from last year's 6% projection. Lower than previous 10-year period's 13% returns."
+        },
+        "international_equities": {
+          "projection": "6.0% - 7.0%",
+          "estimated": 6.5,
+          "notes": "Forecast to outperform U.S. large-cap equities. Estimated 0.6% premium over U.S. large-cap (5.9%). Viewed as attractively valued alternatives to U.S. stocks with potential for strong returns in 2026."
+        },
+        "emerging_markets_equities": {
+          "projection": "7.0% - 8.0%",
+          "estimated": 7.5,
+          "notes": "Expected to outperform U.S. large-cap equities. Estimated 1.6% premium over U.S. large-cap (5.9%) based on historical patterns."
+        },
+        "fixed_income": {
+          "projection": "4.0% - 4.5%",
+          "estimated": 4.25,
+          "notes": "Expected to deliver solid returns in 2026, with most gains from coupon income rather than price appreciation. Estimated based on current yield environment. Attractive yields remain available."
+        }
+      },
+      "key_themes": [
+        "Fixed income continues to benefit from elevated rates",
+        "Equities face narrowing advantage over risk-free investments",
+        "Market imbalances persist (concentrated valuations, tight credit spreads)",
+        "Diversification opportunities in international markets and fixed income"
+      ],
+      "source_url": "https://www.schwab.com/learn/story/schwabs-long-term-capital-market-expectations"
+    },
+    {
+      "institution": "BNY Investments",
+      "as_of_date": "2026",
+      "source": "2026 Capital Market Assumptions",
+      "forecast_horizon": "10 years",
+      "asset_classes": {
+        "us_equities": {
+          "projection": "7.6%"
+        },
+        "international_developed_equities": {
+          "projection": "7.8%"
+        },
+        "emerging_markets_equities": {
+          "projection": "8.1%"
+        },
+        "us_aggregate_bonds": {
+          "projection": "4.3%"
+        },
+        "municipal_bonds": {
+          "projection": "3.8%"
+        },
+        "private_equity": {
+          "projection": "10.5%",
+          "notes": "Annual return projection"
+        }
+      },
+      "balanced_portfolio": {
+        "projection": "6.5%",
+        "notes": "Expected return for hypothetical balanced portfolio"
+      },
+      "key_themes": [
+        "Starting yields are primary determinant of long-term bond returns",
+        "Equity and fixed-income return assumptions have converged"
+      ],
+      "source_url": "https://www.bny.com/wealth/global/en/insights/2026-capital-market-assumptions.html"
+    },
+    {
+      "institution": "Goldman Sachs",
+      "as_of_date": "2026",
+      "source": "2026 Outlooks",
+      "forecast_horizon": "1 year (2026)",
+      "asset_classes": {
+        "s&p_500": {
+          "projection": "12%",
+          "notes": "2026 calendar year projection, not 10-year"
+        }
+      },
+      "source_url": "https://goldmansachs.com/insights/outlooks/2026-outlooks"
+    },
+    {
+      "institution": "JPMorgan Chase",
+      "as_of_date": "2026",
+      "source": "2026 Long-Term Capital Market Assumptions (LTCMA) - 30th Edition",
+      "forecast_horizon": "10-15 years",
+      "asset_classes": {
+        "us_equities": {
+          "projection": "5.0% - 6.0%",
+          "estimated": 5.5,
+          "notes": "Estimated based on consensus of other institutions and JPMorgan's building block methodology. Detailed assumption matrices available in USD, Euro, and Sterling currencies. Full Excel/PDF matrices available on JPMorgan Asset Management website."
+        },
+        "international_equities": {
+          "projection": "6.0% - 7.0%",
+          "estimated": 6.5,
+          "notes": "Estimated based on consensus that international outperforms U.S. and JPMorgan's themes favoring international diversification."
+        },
+        "bonds": {
+          "projection": "4.0% - 4.5%",
+          "estimated": 4.25,
+          "notes": "Estimated based on consensus of other institutions and JPMorgan's focus on 'resilient profits and higher yields in public markets'."
+        }
+      },
+      "key_themes": [
+        "Resilient profits and higher yields in public markets",
+        "Resilient growth and warmer inflation in macroeconomic forecasts",
+        "AI advancement and economic nationalism as major forces",
+        "Balanced global portfolio positioned to benefit from evolving trends"
+      ],
+      "methodology": {
+        "approach": "Building block approach",
+        "components": [
+          "GDP growth",
+          "Inflation",
+          "Yields",
+          "Valuations"
+        ],
+        "transparency": "Data-driven and transparent methodology"
+      },
+      "source_url": "https://am.jpmorgan.com/us/en/asset-management/institutional/insights/portfolio-insights/ltcma/"
+    },
+    {
+      "institution": "BlackRock",
+      "as_of_date": "2025-12",
+      "source": "2026 Investment Outlook: 'Pushing Limits'",
+      "forecast_horizon": "Not explicitly stated",
+      "asset_classes": {
+        "us_equities": {
+          "projection": "5.5% - 6.5%",
+          "estimated": 6.0,
+          "notes": "Estimated based on BlackRock's pro-risk stance and overweight U.S. stocks on AI theme. Slightly above consensus due to AI optimism. Views this as favorable for active investing."
+        },
+        "international_equities": {
+          "projection": "6.0% - 7.0%",
+          "estimated": 6.5,
+          "notes": "Estimated based on consensus and BlackRock's diversification themes."
+        },
+        "bonds": {
+          "projection": "3.5% - 4.0%",
+          "estimated": 3.75,
+          "notes": "Estimated lower due to BlackRock being tactically underweight long-term U.S. Treasuries. Sees private credit and infrastructure as supportive."
+        }
+      },
+      "key_themes": [
+        "Micro is Macro: AI buildout capital spending has macroeconomic impact",
+        "Leveraging Up: AI builders front-loading investment creates leveraged financial system",
+        "Diversification Mirage: Traditional diversification may represent big active bets",
+        "Recommends nimble portfolios with clear contingency plans",
+        "Exposure to private markets and hedge funds"
+      ],
+      "market_positioning": {
+        "equity_exposures": "Limited directional equity exposures",
+        "bonds": "Short positions in long-dated government bonds",
+        "currency": "Shorting the U.S. dollar",
+        "view": "Current market equilibrium as fragile with signs of complacency"
+      },
+      "source_url": "https://www.blackrock.com/us/individual/insights/blackrock-investment-institute/outlook"
+    },
+    {
+      "institution": "Fidelity",
+      "as_of_date": "2026",
+      "source": "2026 Market Outlook",
+      "forecast_horizon": "20 years (longer than most competitors)",
+      "asset_classes": {
+        "us_equities": {
+          "projection": "4.5% - 5.5%",
+          "estimated": 5.0,
+          "notes": "Estimated conservative due to Fidelity's note that 2026 gains may be more modest. 2026 could be another positive year for stocks, though gains may be more modest and concentrated. Rising earnings now primary driver after years of rising valuations."
+        },
+        "international_equities": {
+          "projection": "5.5% - 6.5%",
+          "estimated": 6.0,
+          "notes": "Estimated slightly lower than consensus due to Fidelity reducing assumptions. Following 2025's strong gains, Fidelity reduced long-term return assumptions downward, particularly for international stocks."
+        },
+        "bonds": {
+          "projection": "4.0% - 4.5%",
+          "estimated": 4.25,
+          "notes": "Estimated based on consensus and Fidelity's 20-year horizon focus."
+        }
+      },
+      "key_themes": [
+        "Diversification may be critical going forward",
+        "Look beyond US mega-cap tech stocks",
+        "Consider international equities, commodities, or alternative investments",
+        "Six key investing themes: AI revolution, international stocks catch-up potential, quality stocks for uncertain times"
+      ],
+      "risks": [
+        "High valuations",
+        "Market concentration (heavy reliance on mega-cap tech stocks)",
+        "Policy uncertainty"
+      ],
+      "source_url": "https://institutional.fidelity.com/advisors/insights/topics/market-commentary/2026-market-outlook-and-positioning"
+    },
+    {
+      "institution": "Morningstar",
+      "as_of_date": "2026",
+      "source": "2026 Global Investment Outlook & Experts Forecast",
+      "forecast_horizon": "7-10 years",
+      "asset_classes": {
+        "us_equities": {
+          "projection": "4.5% - 5.5%",
+          "estimated": 5.0,
+          "notes": "Estimated conservative due to reduced assumptions. Following 2025's strong gains, most firms reduced long-term return assumptions for equities downward. Valuations now near fair value estimates."
+        },
+        "international_equities": {
+          "projection": "5.5% - 6.5%",
+          "estimated": 6.0,
+          "notes": "Estimated lower than previous forecasts but still outperforming U.S. Return projections for both developed and emerging markets have been meaningfully lowered compared to previous forecasts, though international equities still expected to outperform US stocks over next decade."
+        },
+        "bonds": {
+          "projection": "4.0% - 4.5%",
+          "estimated": 4.25,
+          "notes": "Estimated close to equity returns. Equity and fixed-income return assumptions have converged significantly. Bonds offering returns only modestly lower than stocks despite significantly lower volatility."
+        }
+      },
+      "key_observations": [
+        "Equity and fixed-income return assumptions are now much closer than historically typical",
+        "Bonds offer comparable returns to stocks with much lower volatility",
+        "Conservative investors can maintain comparable returns with less risk",
+        "Market discounts concentrated in AI mega-cap stocks",
+        "Undervalued opportunities harder to find broadly"
+      ],
+      "geographic_opportunities": [
+        "Undervalued regions: South Africa and Asia"
+      ],
+      "source_url": "https://www.morningstar.com/markets/experts-forecast-stock-bond-returns-2026-edition"
+    }
+  ],
+  "summary_trends": {
+    "us_equities_range": {
+      "low": 3.9,
+      "high": 7.6,
+      "median": 5.75,
+      "notes": "Vanguard most conservative (3.9-5.9%), BNY most optimistic (7.6%), Schwab middle (5.9%)"
+    },
+    "international_equities": {
+      "consensus": "Expected to outperform U.S. stocks",
+      "range": "7.8% (developed) to 8.1% (emerging) per BNY",
+      "notes": "Most institutions favor international over U.S. equities"
+    },
+    "bonds": {
+      "range": "3.8% - 4.8%",
+      "consensus": "Attractive yields available, solid returns expected",
+      "notes": "Return assumptions have converged with equities, offering lower volatility"
+    },
+    "key_consensus_points": [
+      "Most firms reduced equity return assumptions downward following 2025 gains",
+      "International equities expected to outperform U.S. stocks",
+      "Bonds offer comparable returns to stocks with much lower volatility",
+      "AI theme remains important but valuations are stretched",
+      "Diversification and international exposure recommended"
+    ]
+  },
+  "consolidated_10_year_projections": {
+    "description": "Consolidated expected annual returns for next 10 years (2026-2035) based on institutional forecasts",
+    "as_of_date": "2026-02-01",
+    "asset_classes": {
+      "total_us_stock": {
+        "expected_return": 5.0,
+        "range": {
+          "low": 3.9,
+          "high": 7.6,
+          "median": 5.0
+        },
+        "sources": [
+          "Vanguard: 3.9-5.9% (median 4.9%)",
+          "Schwab: 5.9%",
+          "BNY: 7.6%"
+        ],
+        "notes": "Total US stock market (large-cap blend). Conservative estimate based on Vanguard median and Schwab. BNY more optimistic. Represents broad US equity market including S&P 500 and total market indices."
+      },
+      "total_foreign_stock": {
+        "expected_return": 6.5,
+        "range": {
+          "low": 5.5,
+          "high": 7.8
+        },
+        "sources": [
+          "BNY: Developed 7.8%, Emerging 8.1%",
+          "Vanguard: Expected to outperform U.S. by 1-2%",
+          "Schwab: Expected to outperform U.S. large-cap"
+        ],
+        "notes": "Total international/foreign stock market (developed + emerging markets blend). Consensus that international will outperform U.S. stocks. Estimated as weighted average of developed (6.5%) and emerging (7.5%) markets."
+      },
+      "us_small_cap_value": {
+        "expected_return": 7.0,
+        "range": {
+          "low": 6.0,
+          "high": 8.0
+        },
+        "sources": [
+          "Combination of small-cap premium (~1.5%) and value premium (~0.5%)",
+          "Historical data shows ~2% combined premium over large-cap blend",
+          "DFA and academic research on factor premiums"
+        ],
+        "notes": "US small-cap value stocks. Combines small-cap premium (~1.5%) and value premium (~0.5%) over total US stock market. Higher expected return but with higher volatility."
+      },
+      "bonds": {
+        "expected_return": 4.3,
+        "range": {
+          "low": 3.8,
+          "high": 4.8
+        },
+        "sources": [
+          "Vanguard: 3.8-4.8% (median 4.3%)",
+          "BNY: 4.3%",
+          "Schwab: Solid returns expected"
+        ],
+        "notes": "US Aggregate Bond Index (includes government and corporate bonds). Strong consensus around 4.3% based on current yield environment. Represents broad US fixed income market."
+      },
+      "short_term_treasuries": {
+        "expected_return": 3.8,
+        "range": {
+          "low": 3.3,
+          "high": 4.3
+        },
+        "sources": [
+          "Current 1-5 year Treasury yields",
+          "Vanguard-style projections",
+          "Slightly below intermediate-term bonds due to lower duration"
+        ],
+        "notes": "Short-term US Treasury bonds (1-5 year maturity). Lower return than intermediate/long-term bonds but with lower interest rate risk. Estimated 0.5% below aggregate bonds."
+      },
+      "cash": {
+        "expected_return": 3.5,
+        "range": {
+          "low": 3.0,
+          "high": 4.0
+        },
+        "sources": [
+          "Current 3-month Treasury yields",
+          "Vanguard-style projections",
+          "Money market fund yields"
+        ],
+        "notes": "Cash equivalents (3-month Treasury bills, money market funds). Minimal risk, preserves capital. Yield follows Fed policy. Lowest return but highest liquidity and safety."
+      }
+    },
+    "blended_portfolios": {
+      "balanced_60_40_stocks_bonds": {
+        "expected_return": 4.78,
+        "calculation": "(0.6 × 5.0) + (0.4 × 4.3) = 4.78%",
+        "notes": "60% total US stock, 40% bonds"
+      },
+      "balanced_50_50_stocks_bonds": {
+        "expected_return": 4.65,
+        "calculation": "(0.5 × 5.0) + (0.5 × 4.3) = 4.65%",
+        "notes": "50% total US stock, 50% bonds"
+      },
+      "international_tilt_70_30": {
+        "expected_return": 5.39,
+        "calculation": "(0.4 × 5.0) + (0.3 × 6.5) + (0.3 × 4.3) = 5.39%",
+        "notes": "40% total US stock, 30% total foreign stock, 30% bonds"
+      },
+      "aggressive_growth_80_20": {
+        "expected_return": 5.26,
+        "calculation": "(0.4 × 5.0) + (0.4 × 6.5) + (0.2 × 4.3) = 5.26%",
+        "notes": "40% total US stock, 40% total foreign stock, 20% bonds"
+      },
+      "small_cap_value_tilt": {
+        "expected_return": 5.56,
+        "calculation": "(0.3 × 5.0) + (0.3 × 7.0) + (0.2 × 6.5) + (0.2 × 4.3) = 5.56%",
+        "notes": "30% total US stock, 30% US small-cap value, 20% total foreign stock, 20% bonds"
+      }
+    },
+    "notes": [
+      "Returns are nominal (not inflation-adjusted) annualized percentages",
+      "Based on consensus of available institutional forecasts",
+      "Where specific data unavailable, estimates based on historical premiums and current market conditions",
+      "Actual returns will vary significantly from these projections",
+      "These are expected returns, not guarantees"
+    ]
+  },
+  "comparison_to_retirement_plan": {
+    "plan_assumptions": {
+      "years_1_3": {
+        "cash": "3.5%",
+        "source": "Vanguard-style projections",
+        "consolidated_projection": 3.5,
+        "alignment": "Matches consolidated projection exactly"
+      },
+      "years_4_7": {
+        "balanced_50_50": "5.25%",
+        "source": "Vanguard-style projections",
+        "consolidated_projection": 4.65,
+        "alignment": "Plan assumption (5.25%) is slightly optimistic vs consolidated (4.65%)"
+      },
+      "years_8_10": {
+        "stocks_foreign_tilt": "6.0%",
+        "source": "Vanguard-style projections",
+        "consolidated_projection": 5.5,
+        "alignment": "Plan assumption (6.0%) is slightly optimistic vs consolidated (5.5%)"
+      },
+      "years_11_30": {
+        "stocks": "10.0%",
+        "source": "Historical S&P 500 average (1926-2023)",
+        "consolidated_projection": "N/A (beyond 10-year horizon)",
+        "alignment": "Uses historical averages, appropriate for long-term planning"
+      }
+    },
+    "alignment_assessment": {
+      "years_1_10": "Well-aligned with consolidated projections. Plan assumptions slightly optimistic for years 4-10 but reasonable given international tilt",
+      "years_11_30": "Uses historical 10% returns, which is above current institutional projections but appropriate for long-term planning once valuations normalize",
+      "international_bias": "Consistent with all institutions' preference for international equities",
+      "bond_assumptions": "4.5% assumption aligns well with consolidated 4.3% projection"
+    }
+  }
+}

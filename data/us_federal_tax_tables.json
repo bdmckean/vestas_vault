@@ -1,0 +1,414 @@
+{
+  "metadata": {
+    "last_updated": "2026-02-01",
+    "description": "US Federal Income Tax Brackets and Rates",
+    "tax_year": 2025,
+    "data_source": "IRS, Tax Foundation",
+    "note": "Tax brackets are adjusted annually for inflation. Rates remain unchanged through 2025 per Tax Cuts and Jobs Act of 2017."
+  },
+  "standard_deductions": {
+    "2026": {
+      "single": 15500,
+      "married_filing_jointly": 32200,
+      "married_filing_separately": 16100,
+      "head_of_household": 23200,
+      "qualifying_widow": 32200
+    },
+    "2025": {
+      "single": 15500,
+      "married_filing_jointly": 31000,
+      "married_filing_separately": 15500,
+      "head_of_household": 23200,
+      "qualifying_widow": 31000
+    },
+    "2024": {
+      "single": 14600,
+      "married_filing_jointly": 29200,
+      "married_filing_separately": 14600,
+      "head_of_household": 21900,
+      "qualifying_widow": 29200
+    }
+  },
+  "senior_deductions": {
+    "additional_per_person_65_plus": 1650,
+    "bonus_per_person_65_plus": 6000,
+    "bonus_income_threshold": 150000,
+    "note": "Additional $1,650 per person 65+. Bonus $6,000 per person 65+ if income under $150k (2026+)"
+  },
+  "tax_brackets": {
+    "2025": {
+      "single": [
+        {
+          "rate": 10,
+          "min": 0,
+          "max": 11925
+        },
+        {
+          "rate": 12,
+          "min": 11925,
+          "max": 48475
+        },
+        {
+          "rate": 22,
+          "min": 48475,
+          "max": 103350
+        },
+        {
+          "rate": 24,
+          "min": 103350,
+          "max": 197300
+        },
+        {
+          "rate": 32,
+          "min": 197300,
+          "max": 250525
+        },
+        {
+          "rate": 35,
+          "min": 250525,
+          "max": 626350
+        },
+        {
+          "rate": 37,
+          "min": 626350,
+          "max": null
+        }
+      ],
+      "married_filing_jointly": [
+        {
+          "rate": 10,
+          "min": 0,
+          "max": 23850
+        },
+        {
+          "rate": 12,
+          "min": 23850,
+          "max": 96950
+        },
+        {
+          "rate": 22,
+          "min": 96950,
+          "max": 206700
+        },
+        {
+          "rate": 24,
+          "min": 206700,
+          "max": 394600
+        },
+        {
+          "rate": 32,
+          "min": 394600,
+          "max": 501050
+        },
+        {
+          "rate": 35,
+          "min": 501050,
+          "max": 751600
+        },
+        {
+          "rate": 37,
+          "min": 751600,
+          "max": null
+        }
+      ],
+      "married_filing_separately": [
+        {
+          "rate": 10,
+          "min": 0,
+          "max": 11925
+        },
+        {
+          "rate": 12,
+          "min": 11925,
+          "max": 48475
+        },
+        {
+          "rate": 22,
+          "min": 48475,
+          "max": 103350
+        },
+        {
+          "rate": 24,
+          "min": 103350,
+          "max": 197300
+        },
+        {
+          "rate": 32,
+          "min": 197300,
+          "max": 250525
+        },
+        {
+          "rate": 35,
+          "min": 250525,
+          "max": 375800
+        },
+        {
+          "rate": 37,
+          "min": 375800,
+          "max": null
+        }
+      ],
+      "head_of_household": [
+        {
+          "rate": 10,
+          "min": 0,
+          "max": 17050
+        },
+        {
+          "rate": 12,
+          "min": 17050,
+          "max": 64950
+        },
+        {
+          "rate": 22,
+          "min": 64950,
+          "max": 103350
+        },
+        {
+          "rate": 24,
+          "min": 103350,
+          "max": 210800
+        },
+        {
+          "rate": 32,
+          "min": 210800,
+          "max": 263750
+        },
+        {
+          "rate": 35,
+          "min": 263750,
+          "max": 626350
+        },
+        {
+          "rate": 37,
+          "min": 626350,
+          "max": null
+        }
+      ],
+      "qualifying_widow": [
+        {
+          "rate": 10,
+          "min": 0,
+          "max": 23850
+        },
+        {
+          "rate": 12,
+          "min": 23850,
+          "max": 96950
+        },
+        {
+          "rate": 22,
+          "min": 96950,
+          "max": 206700
+        },
+        {
+          "rate": 24,
+          "min": 206700,
+          "max": 394600
+        },
+        {
+          "rate": 32,
+          "min": 394600,
+          "max": 501050
+        },
+        {
+          "rate": 35,
+          "min": 501050,
+          "max": 751600
+        },
+        {
+          "rate": 37,
+          "min": 751600,
+          "max": null
+        }
+      ]
+    },
+    "2024": {
+      "single": [
+        {
+          "rate": 10,
+          "min": 0,
+          "max": 11600
+        },
+        {
+          "rate": 12,
+          "min": 11600,
+          "max": 47150
+        },
+        {
+          "rate": 22,
+          "min": 47150,
+          "max": 100525
+        },
+        {
+          "rate": 24,
+          "min": 100525,
+          "max": 191950
+        },
+        {
+          "rate": 32,
+          "min": 191950,
+          "max": 243725
+        },
+        {
+          "rate": 35,
+          "min": 243725,
+          "max": 609350
+        },
+        {
+          "rate": 37,
+          "min": 609350,
+          "max": null
+        }
+      ],
+      "married_filing_jointly": [
+        {
+          "rate": 10,
+          "min": 0,
+          "max": 23200
+        },
+        {
+          "rate": 12,
+          "min": 23200,
+          "max": 94300
+        },
+        {
+          "rate": 22,
+          "min": 94300,
+          "max": 201050
+        },
+        {
+          "rate": 24,
+          "min": 201050,
+          "max": 383900
+        },
+        {
+          "rate": 32,
+          "min": 383900,
+          "max": 487450
+        },
+        {
+          "rate": 35,
+          "min": 487450,
+          "max": 731200
+        },
+        {
+          "rate": 37,
+          "min": 731200,
+          "max": null
+        }
+      ],
+      "married_filing_separately": [
+        {
+          "rate": 10,
+          "min": 0,
+          "max": 11600
+        },
+        {
+          "rate": 12,
+          "min": 11600,
+          "max": 47150
+        },
+        {
+          "rate": 22,
+          "min": 47150,
+          "max": 100525
+        },
+        {
+          "rate": 24,
+          "min": 100525,
+          "max": 191950
+        },
+        {
+          "rate": 32,
+          "min": 191950,
+          "max": 243725
+        },
+        {
+          "rate": 35,
+          "min": 243725,
+          "max": 365600
+        },
+        {
+          "rate": 37,
+          "min": 365600,
+          "max": null
+        }
+      ],
+      "head_of_household": [
+        {
+          "rate": 10,
+          "min": 0,
+          "max": 16550
+        },
+        {
+          "rate": 12,
+          "min": 16550,
+          "max": 63100
+        },
+        {
+          "rate": 22,
+          "min": 63100,
+          "max": 100500
+        },
+        {
+          "rate": 24,
+          "min": 100500,
+          "max": 191950
+        },
+        {
+          "rate": 32,
+          "min": 191950,
+          "max": 243700
+        },
+        {
+          "rate": 35,
+          "min": 243700,
+          "max": 609350
+        },
+        {
+          "rate": 37,
+          "min": 609350,
+          "max": null
+        }
+      ],
+      "qualifying_widow": [
+        {
+          "rate": 10,
+          "min": 0,
+          "max": 23200
+        },
+        {
+          "rate": 12,
+          "min": 23200,
+          "max": 94300
+        },
+        {
+          "rate": 22,
+          "min": 94300,
+          "max": 201050
+        },
+        {
+          "rate": 24,
+          "min": 201050,
+          "max": 383900
+        },
+        {
+          "rate": 32,
+          "min": 383900,
+          "max": 487450
+        },
+        {
+          "rate": 35,
+          "min": 487450,
+          "max": 731200
+        },
+        {
+          "rate": 37,
+          "min": 731200,
+          "max": null
+        }
+      ]
+    }
+  }
+}

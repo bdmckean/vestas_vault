@@ -1,0 +1,746 @@
+{
+  "metadata": {
+    "last_updated": "2026-02-01",
+    "description": "Long-term historical average annual returns for major asset classes, used for projections beyond 10-year horizons",
+    "data_sources": [
+      "Ibbotson SBBI (Stocks, Bonds, Bills, and Inflation) 1926-2024",
+      "NYU Stern Historical Returns Database 1928-2024",
+      "UBS Global Investment Returns Yearbook 2025",
+      "Various academic and institutional sources"
+    ],
+    "note": "Returns are annualized geometric (compound) averages unless otherwise noted. All returns assume reinvestment of dividends/interest."
+  },
+  "us_equities": {
+    "large_cap_sp500": {
+      "description": "S&P 500 Index (includes dividends)",
+      "periods": {
+        "since_1928": {
+          "nominal": 9.82,
+          "real": "~6.7",
+          "years": 95,
+          "notes": "Through end of 2022"
+        },
+        "since_1957": {
+          "nominal": 10.56,
+          "real": 6.69,
+          "years": 68,
+          "notes": "S&P 500 inception to present"
+        },
+        "100_year": {
+          "nominal": 10.45,
+          "real": 7.29,
+          "years": 100,
+          "notes": "As of end of 2025"
+        },
+        "50_year": {
+          "nominal": 11.99,
+          "real": "~8.5",
+          "years": 50,
+          "notes": "As of end of 2025"
+        },
+        "30_year": {
+          "nominal": 10.32,
+          "real": "~7.5",
+          "years": 30,
+          "notes": "As of end of 2025"
+        },
+        "20_year": {
+          "nominal": "~10.0",
+          "real": "~7.0",
+          "years": 20,
+          "notes": "Approximate"
+        },
+        "10_year": {
+          "nominal": 14.72,
+          "real": "~12.0",
+          "years": 10,
+          "notes": "As of end of 2025 - above long-term average"
+        },
+        "5_year": {
+          "nominal": 14.78,
+          "real": "~12.0",
+          "years": 5,
+          "notes": "As of end of 2025 - above long-term average"
+        }
+      },
+      "volatility": {
+        "standard_deviation": "~15-20%",
+        "notes": "Annual volatility varies by period"
+      },
+      "source": "Macrotrends, Investopedia, NYU Stern"
+    },
+    "small_cap": {
+      "description": "Small-cap stocks (various indices)",
+      "periods": {
+        "since_1926": {
+          "nominal": 11.74,
+          "real": "~8.5",
+          "years": 99,
+          "notes": "1928-2024 period. Much of outperformance came from 1940-1969 period when many were illiquid micro-caps"
+        },
+        "since_1970": {
+          "nominal": "~10.0",
+          "real": "~7.0",
+          "years": 55,
+          "notes": "More in line with S&P 500 since 1970"
+        },
+        "russell_2000_since_1984": {
+          "nominal": "~9.5",
+          "real": "~6.5",
+          "years": 41,
+          "notes": "Russell 2000 index inception"
+        },
+        "russell_2000_20_year": {
+          "nominal": 8.38,
+          "real": "~5.5",
+          "years": 20,
+          "notes": "Underperformed S&P 500 over this period"
+        },
+        "russell_2000_10_year": {
+          "nominal": 11.8,
+          "real": "~9.0",
+          "years": 10,
+          "notes": "As of 2025"
+        }
+      },
+      "volatility": {
+        "standard_deviation": "~20-25%",
+        "notes": "Higher volatility than large-cap stocks"
+      },
+      "source": "NYU Stern, Russell Index data"
+    },
+    "small_cap_value": {
+      "description": "Small-cap value stocks",
+      "periods": {
+        "since_1926": {
+          "nominal": "~13.0",
+          "real": "~10.0",
+          "years": 99,
+          "notes": "Estimated based on small-cap premium (~1.5%) and value premium (~0.5%) over large-cap blend. Much of historical data from academic research and DFA data."
+        },
+        "russell_2000_value_10_year": {
+          "nominal": 14.59,
+          "real": "~12.0",
+          "years": 10,
+          "notes": "As of 2025"
+        },
+        "russell_2000_value_5_year": {
+          "nominal": 13.56,
+          "real": "~11.0",
+          "years": 5,
+          "notes": "As of 2025"
+        },
+        "dfa_us_small_cap_value": {
+          "nominal": "~12.0",
+          "real": "~9.0",
+          "years": 32,
+          "notes": "DFA US Small Cap Value since 1993 inception"
+        },
+        "30_year": {
+          "nominal": "~12.5",
+          "real": "~9.5",
+          "years": 30,
+          "notes": "Approximate 30-year average"
+        }
+      },
+      "volatility": {
+        "standard_deviation": "~22-28%",
+        "notes": "Higher volatility than large-cap stocks, but premium compensates for risk over long periods"
+      },
+      "notes": "Small-cap value has shown premium over small-cap blend historically, though cyclical. Combines small-cap and value factor premiums."
+    },
+    "total_us_stock": {
+      "description": "Total US stock market (blend of large-cap and small-cap)",
+      "periods": {
+        "since_1926": {
+          "nominal": "~10.0",
+          "real": "~7.0",
+          "years": 99,
+          "notes": "Weighted average of large-cap (~9.8%) and small-cap (~11.7%) returns. Represents broad US equity market."
+        },
+        "since_1970": {
+          "nominal": "~10.5",
+          "real": "~7.5",
+          "years": 55,
+          "notes": "More recent period with better data quality"
+        },
+        "30_year": {
+          "nominal": 10.32,
+          "real": "~7.5",
+          "years": 30,
+          "notes": "30-year average, similar to S&P 500 over this period"
+        },
+        "20_year": {
+          "nominal": "~10.0",
+          "real": "~7.0",
+          "years": 20,
+          "notes": "Approximate"
+        },
+        "10_year": {
+          "nominal": 14.72,
+          "real": "~12.0",
+          "years": 10,
+          "notes": "As of end of 2025 - above long-term average"
+        }
+      },
+      "volatility": {
+        "standard_deviation": "~15-18%",
+        "notes": "Slightly lower than small-cap alone due to large-cap component"
+      },
+      "notes": "Represents the entire US stock market. Includes both large-cap and small-cap stocks in market-cap weighted proportion."
+    },
+    "value_stocks": {
+      "description": "Large-cap value stocks",
+      "periods": {
+        "since_1926": {
+          "nominal": "~9.5",
+          "real": "~6.5",
+          "years": 99,
+          "notes": "Approximate, value premium varies by period"
+        }
+      },
+      "notes": "Value premium exists but is cyclical and not guaranteed"
+    }
+  },
+  "international_equities": {
+    "developed_markets": {
+      "description": "Non-U.S. developed markets equities",
+      "periods": {
+        "since_1900_125_year": {
+          "nominal": "~8.0",
+          "real": "~5.0",
+          "years": 125,
+          "notes": "UBS Global Investment Returns Yearbook. U.S. stands out with ~5% real appreciation, highest among developed nations"
+        },
+        "non_us_developed_median": {
+          "nominal": "~7.0",
+          "real": 1.5,
+          "years": 125,
+          "notes": "Median real appreciation for non-U.S. developed countries significantly lower than U.S."
+        },
+        "since_1970": {
+          "nominal": "~8.5",
+          "real": "~5.5",
+          "years": 55,
+          "notes": "MSCI EAFE Index data available from 1970. More recent period shows better returns than very long-term average."
+        },
+        "since_2000": {
+          "nominal": "~6.0",
+          "real": 3.5,
+          "years": 25,
+          "notes": "Global equity investors achieved 3.5% annualized real return since 2000, more modest than 20th century"
+        },
+        "30_year": {
+          "nominal": "~7.5",
+          "real": "~4.5",
+          "years": 30,
+          "notes": "Approximate 30-year average"
+        },
+        "20_year": {
+          "nominal": "~6.5",
+          "real": "~3.5",
+          "years": 20,
+          "notes": "More recent period, lower than long-term average"
+        },
+        "10_year": {
+          "nominal": "~7.0",
+          "real": "~4.0",
+          "years": 10,
+          "notes": "Recent 10-year period"
+        }
+      },
+      "volatility": {
+        "standard_deviation": "~15-18%",
+        "notes": "Similar to U.S. large-cap volatility"
+      },
+      "source": "UBS Global Investment Returns Yearbook 2025, MSCI EAFE Index"
+    },
+    "emerging_markets": {
+      "description": "Emerging markets equities",
+      "periods": {
+        "since_1988": {
+          "nominal": "~9.0",
+          "real": "~6.0",
+          "years": 37,
+          "notes": "MSCI Emerging Markets Index inception. Highly volatile with periods of strong performance (1988-1999) alternating with significant drawdowns"
+        },
+        "since_2000": {
+          "nominal": "~8.5",
+          "real": "~5.5",
+          "years": 25,
+          "notes": "More recent period, includes major crises and recoveries"
+        },
+        "30_year": {
+          "nominal": "~9.5",
+          "real": "~6.5",
+          "years": 30,
+          "notes": "Approximate 30-year average, includes strong periods"
+        },
+        "20_year": {
+          "nominal": "~8.0",
+          "real": "~5.0",
+          "years": 20,
+          "notes": "More recent period, lower than longer-term average"
+        },
+        "10_year": {
+          "nominal": "~7.5",
+          "real": "~4.5",
+          "years": 10,
+          "notes": "Recent 10-year period, more modest returns"
+        }
+      },
+      "volatility": {
+        "standard_deviation": "~25-30%",
+        "notes": "Significantly higher volatility than developed markets"
+      },
+      "notes": "Higher return potential but with much higher risk. Includes countries like China, India, Brazil, South Korea, etc."
+    },
+    "international_small_cap_value": {
+      "description": "International small-cap value",
+      "periods": {
+        "since_1993": {
+          "nominal": "~10.0",
+          "real": "~7.0",
+          "years": 32,
+          "notes": "DFA International Small Cap Value since inception. Similar factor premiums as U.S. small-cap value."
+        },
+        "20_year": {
+          "nominal": "~9.5",
+          "real": "~6.5",
+          "years": 20,
+          "notes": "Approximate 20-year average"
+        },
+        "10_year": {
+          "nominal": "~8.5",
+          "real": "~5.5",
+          "years": 10,
+          "notes": "Recent 10-year period"
+        }
+      },
+      "volatility": {
+        "standard_deviation": "~20-25%",
+        "notes": "Higher volatility than developed markets large-cap, similar to U.S. small-cap value"
+      },
+      "notes": "Limited long-term data, but DFA and other providers show similar value premium patterns as U.S. markets. Combines international diversification with small-cap and value factors."
+    },
+    "total_foreign_stock": {
+      "description": "Total international/foreign stock market (developed + emerging markets blend)",
+      "periods": {
+        "since_1970": {
+          "nominal": "~8.5",
+          "real": "~5.5",
+          "years": 55,
+          "notes": "Weighted average of developed (~8.5%) and emerging (~9.0%) markets. MSCI ACWI ex-US data available from 1970."
+        },
+        "since_2000": {
+          "nominal": "~7.0",
+          "real": "~4.0",
+          "years": 25,
+          "notes": "More recent period, includes both developed and emerging markets"
+        },
+        "30_year": {
+          "nominal": "~8.0",
+          "real": "~5.0",
+          "years": 30,
+          "notes": "Approximate 30-year average"
+        },
+        "20_year": {
+          "nominal": "~7.5",
+          "real": "~4.5",
+          "years": 20,
+          "notes": "More recent period"
+        },
+        "10_year": {
+          "nominal": "~7.0",
+          "real": "~4.0",
+          "years": 10,
+          "notes": "Recent 10-year period"
+        }
+      },
+      "volatility": {
+        "standard_deviation": "~17-20%",
+        "notes": "Moderate volatility, between developed and emerging markets"
+      },
+      "notes": "Represents total international stock market including both developed and emerging markets. Provides diversification benefits relative to U.S. stocks."
+    }
+  },
+  "fixed_income": {
+    "us_treasury_10_year": {
+      "description": "10-year U.S. Treasury bonds",
+      "periods": {
+        "since_1928": {
+          "nominal": 4.50,
+          "real": "~1.5",
+          "years": 97,
+          "notes": "1928-2024 period"
+        },
+        "30_year": {
+          "nominal": "~4.0",
+          "real": "~1.0",
+          "years": 30,
+          "notes": "Approximate, varies significantly by starting yield"
+        }
+      },
+      "volatility": {
+        "standard_deviation": "~8-10%",
+        "notes": "Lower volatility than stocks but still subject to interest rate risk"
+      },
+      "source": "NYU Stern, Federal Reserve data"
+    },
+    "us_treasury_30_year": {
+      "description": "30-year U.S. Treasury bonds",
+      "periods": {
+        "since_1977": {
+          "nominal": "~5.0",
+          "real": "~2.0",
+          "years": 48,
+          "notes": "Data available from 1977 onward"
+        }
+      },
+      "notes": "Higher duration = higher sensitivity to interest rate changes"
+    },
+    "us_aggregate_bonds": {
+      "description": "Bloomberg U.S. Aggregate Bond Index",
+      "periods": {
+        "since_1976": {
+          "nominal": "~5.5",
+          "real": "~2.5",
+          "years": 49,
+          "notes": "Index inception. Includes government and corporate bonds"
+        }
+      },
+      "notes": "Starting yield is primary determinant of long-term bond returns"
+    },
+    "corporate_bonds_baa": {
+      "description": "Baa-rated corporate bonds (investment grade)",
+      "periods": {
+        "since_1928": {
+          "nominal": "~5.5",
+          "real": "~2.5",
+          "years": 97,
+          "notes": "Credit risk premium over Treasuries"
+        }
+      },
+      "notes": "Higher yield than Treasuries but with credit risk"
+    },
+    "high_yield_bonds": {
+      "description": "High-yield (junk) corporate bonds",
+      "periods": {
+        "since_1980": {
+          "nominal": "~8.0",
+          "real": "~5.0",
+          "years": 45,
+          "notes": "Higher returns but with significant credit risk and volatility"
+        }
+      },
+      "volatility": {
+        "standard_deviation": "~10-12%",
+        "notes": "Higher volatility than investment-grade bonds"
+      }
+    },
+    "tips": {
+      "description": "Treasury Inflation-Protected Securities",
+      "periods": {
+        "since_1997": {
+          "nominal": "~4.0",
+          "real": "~2.0",
+          "years": 28,
+          "notes": "Real return component plus inflation adjustment"
+        }
+      },
+      "notes": "Provides inflation protection, real return typically 1-2%"
+    },
+    "cash_treasury_bills": {
+      "description": "3-month U.S. Treasury bills",
+      "periods": {
+        "since_1928": {
+          "nominal": 3.31,
+          "real": "~0.3",
+          "years": 97,
+          "notes": "1928-2024 period. Minimal real return over long term"
+        }
+      },
+      "volatility": {
+        "standard_deviation": "~1-2%",
+        "notes": "Very low volatility, essentially risk-free"
+      },
+      "notes": "Preserves capital but minimal growth after inflation"
+    },
+    "short_term_treasuries": {
+      "description": "Short-term U.S. Treasury bonds (1-5 year maturity)",
+      "periods": {
+        "since_1973": {
+          "nominal": "~4.0",
+          "real": "~1.0",
+          "years": 52,
+          "notes": "Bloomberg 1-5 Year Treasury Index data available from 1973. Lower return than intermediate/long-term bonds but with lower interest rate risk."
+        },
+        "30_year": {
+          "nominal": "~3.5",
+          "real": "~0.5",
+          "years": 30,
+          "notes": "Approximate 30-year average"
+        },
+        "10_year": {
+          "nominal": "~3.3",
+          "real": "~0.3",
+          "years": 10,
+          "notes": "Recent 10-year period"
+        }
+      },
+      "volatility": {
+        "standard_deviation": "~2-4%",
+        "notes": "Low volatility, minimal interest rate risk"
+      },
+      "notes": "Good balance of yield and stability. Lower duration than intermediate/long-term bonds."
+    },
+    "intermediate_term_treasuries": {
+      "description": "Intermediate-term U.S. Treasury bonds (5-10 year maturity)",
+      "periods": {
+        "since_1973": {
+          "nominal": "~4.5",
+          "real": "~1.5",
+          "years": 52,
+          "notes": "Bloomberg Intermediate Treasury Index. Moderate duration risk."
+        },
+        "30_year": {
+          "nominal": "~4.2",
+          "real": "~1.2",
+          "years": 30,
+          "notes": "Approximate 30-year average"
+        }
+      },
+      "volatility": {
+        "standard_deviation": "~4-6%",
+        "notes": "Moderate volatility, more sensitive to interest rate changes than short-term"
+      },
+      "notes": "Balance between yield and interest rate risk. Typically 0.5-1% higher return than short-term Treasuries."
+    },
+    "municipal_bonds": {
+      "description": "Tax-free municipal bonds (investment grade)",
+      "periods": {
+        "since_1980": {
+          "nominal": "~4.5",
+          "real": "~1.5",
+          "years": 45,
+          "notes": "Bloomberg Municipal Bond Index. Tax-equivalent yield higher for investors in higher tax brackets."
+        },
+        "30_year": {
+          "nominal": "~4.2",
+          "real": "~1.2",
+          "years": 30,
+          "notes": "Approximate 30-year average"
+        },
+        "10_year": {
+          "nominal": "~3.8",
+          "real": "~0.8",
+          "years": 10,
+          "notes": "Recent 10-year period"
+        }
+      },
+      "volatility": {
+        "standard_deviation": "~4-6%",
+        "notes": "Similar volatility to intermediate-term Treasuries"
+      },
+      "tax_advantage": {
+        "federal_tax_free": true,
+        "state_tax_free": "Varies by state",
+        "tax_equivalent_yield_25pct_bracket": "~6.0%",
+        "tax_equivalent_yield_35pct_bracket": "~6.9%",
+        "notes": "Tax-equivalent yield calculation: nominal yield / (1 - tax rate). Example: 4.5% / (1 - 0.35) = 6.9% for 35% bracket."
+      },
+      "notes": "Attractive for high-income investors due to tax-free status. Credit risk varies by issuer."
+    }
+  },
+  "real_estate": {
+    "reits": {
+      "description": "U.S. Equity REITs",
+      "periods": {
+        "since_1978": {
+          "nominal": 12.87,
+          "real": "~9.5",
+          "years": 38,
+          "notes": "December 1978 through March 2016. Outperformed Russell 3000 (11.64%) over this period"
+        },
+        "20_year_rolling": {
+          "nominal": "11.1-12.4",
+          "real": "~8.0-9.5",
+          "years": 20,
+          "notes": "Consistently outperformed stocks in nearly two-thirds of 20-year periods, especially after March 1989"
+        },
+        "10_year_rolling": {
+          "nominal": "10.0-13.3",
+          "real": "~7.0-10.5",
+          "years": 10,
+          "notes": "More stable than stocks (7.9-15.0% range)"
+        }
+      },
+      "volatility": {
+        "standard_deviation_10yr": 9.0,
+        "standard_deviation_20yr": 6.0,
+        "notes": "Significantly lower volatility than stocks (16.0% and 13.8% respectively)"
+      },
+      "source": "NAREIT, REIT.com"
+    },
+    "residential_real_estate": {
+      "description": "U.S. residential real estate",
+      "periods": {
+        "since_1928": {
+          "nominal": 4.23,
+          "real": "~1.2",
+          "years": 97,
+          "notes": "1928-2024 period. Lower returns than stocks but with different risk profile"
+        }
+      },
+      "notes": "Includes home price appreciation, not rental income"
+    }
+  },
+  "commodities": {
+    "gold": {
+      "description": "Gold (spot price)",
+      "periods": {
+        "since_1928": {
+          "nominal": 5.12,
+          "real": "~2.0",
+          "years": 97,
+          "notes": "1928-2025 period. Highly volatile, 'feast or famine' pattern"
+        },
+        "since_1971": {
+          "nominal": "~8.0",
+          "real": "~5.0",
+          "years": 54,
+          "notes": "January 1971 to May 2025. Slightly above general commodities"
+        }
+      },
+      "volatility": {
+        "standard_deviation": "~15-20%",
+        "notes": "High volatility, double-digit returns in 3 of past 6 decades"
+      },
+      "notes": "Inflation hedge but no yield. Performance varies dramatically by decade"
+    },
+    "commodities_broad": {
+      "description": "Broad commodity futures index",
+      "periods": {
+        "since_1959": {
+          "nominal": "~10.0",
+          "real": "~7.0",
+          "years": 45,
+          "notes": "July 1959 through March 2004. Fully-collateralized commodity futures offered same return and Sharpe ratio as equities"
+        },
+        "since_1971": {
+          "nominal": "~8.0",
+          "real": "~5.0",
+          "years": 54,
+          "notes": "Slightly below gold over this period"
+        }
+      },
+      "correlation": {
+        "with_stocks": "negative",
+        "with_bonds": "negative",
+        "with_inflation": "positive",
+        "notes": "Provides diversification benefits due to negative correlation with stocks and bonds"
+      },
+      "source": "Academic research, NBER"
+    }
+  },
+  "inflation": {
+    "cpi_all_urban": {
+      "description": "Consumer Price Index (CPI-U)",
+      "periods": {
+        "since_1928": {
+          "nominal": "~3.0",
+          "years": 97,
+          "notes": "Average annual inflation rate 1928-2024"
+        },
+        "since_1950": {
+          "nominal": "~3.5",
+          "years": 75,
+          "notes": "Post-WWII period"
+        },
+        "since_1980": {
+          "nominal": "~2.8",
+          "years": 45,
+          "notes": "Modern era with Fed inflation targeting"
+        }
+      },
+      "source": "Bureau of Labor Statistics"
+    }
+  },
+  "key_insights": {
+    "equity_premium": {
+      "description": "Stocks vs Bonds",
+      "premium": "~5-6%",
+      "notes": "Historical equity risk premium. Stocks have significantly outperformed bonds over long periods"
+    },
+    "small_cap_premium": {
+      "description": "Small-cap vs Large-cap",
+      "premium": "~1-2%",
+      "notes": "Small-cap premium exists but is cyclical and much of historical outperformance came from 1940-1969 period"
+    },
+    "value_premium": {
+      "description": "Value vs Growth",
+      "premium": "~1-2%",
+      "notes": "Value premium exists but is cyclical and not guaranteed. More pronounced in small-cap segment"
+    },
+    "international_diversification": {
+      "description": "International vs U.S.",
+      "notes": "U.S. has outperformed most developed markets over 125-year period, but international diversification still valuable for risk reduction"
+    },
+    "real_vs_nominal": {
+      "description": "Inflation impact",
+      "average_inflation": "~3.0%",
+      "notes": "Real returns are typically 2-3% lower than nominal returns. Essential to consider inflation for long-term planning"
+    },
+    "decade_variation": {
+      "description": "Period dependency",
+      "notes": "Asset class performance varies dramatically by decade. Stocks delivered double-digit returns in 4 of past 5 decades, but 2000-2009 was difficult. No asset class consistently outperforms."
+    },
+    "diversification_lesson": {
+      "description": "Importance of diversification",
+      "notes": "Leaders and laggards change continuously. Large caps have underperformed small caps in some decades while outperforming in others. Diversification across asset classes is essential."
+    }
+  },
+  "recommended_use": {
+    "for_10_year_projections": "Use current institutional forecasts (see investment_return_projections.json)",
+    "for_20_30_year_projections": "Use 30-year historical averages as starting point, adjust for current valuations",
+    "for_30_plus_year_projections": "Use 50-100 year historical averages, assume mean reversion",
+    "caveats": [
+      "Past performance does not guarantee future results",
+      "Starting valuations matter significantly",
+      "Returns vary dramatically by decade",
+      "Consider both nominal and real returns",
+      "Account for fees and taxes in actual planning",
+      "Sequence of returns risk matters for retirees"
+    ]
+  },
+  "comparison_to_retirement_plan": {
+    "plan_assumptions": {
+      "years_1_3_cash": {
+        "assumed": 3.5,
+        "historical": 3.31,
+        "assessment": "Well-aligned with historical T-bill returns"
+      },
+      "years_4_7_balanced": {
+        "assumed": 5.25,
+        "historical_stocks": 10.32,
+        "historical_bonds": 4.50,
+        "blended_50_50": 7.41,
+        "assessment": "Conservative assumption, appropriate given Vanguard's subdued outlook"
+      },
+      "years_8_10_stocks": {
+        "assumed": 6.0,
+        "historical_sp500": 10.32,
+        "historical_international": "~8.0",
+        "assessment": "Conservative, aligns with Vanguard's 10-year outlook"
+      },
+      "years_11_30_stocks": {
+        "assumed": 10.0,
+        "historical_sp500_30yr": 10.32,
+        "historical_sp500_50yr": 11.99,
+        "historical_sp500_100yr": 10.45,
+        "assessment": "Well-aligned with long-term historical averages. Appropriate for 20+ year horizon"
+      }
+    },
+    "conclusion": "Your retirement plan's return assumptions are conservative for years 1-10 (appropriate given current valuations) and align well with long-term historical averages for years 11-30. The 10% assumption for the final 20 years is consistent with 30-100 year S&P 500 historical returns."
+  }
+}

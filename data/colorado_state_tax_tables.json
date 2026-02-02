@@ -1,0 +1,50 @@
+{
+  "metadata": {
+    "last_updated": "2026-02-01",
+    "description": "Colorado State Income Tax Information",
+    "tax_year": 2025,
+    "data_source": "Colorado Department of Revenue, Tax-Rates.org",
+    "note": "Colorado uses a flat income tax rate. The rate can be temporarily reduced to 4.25% if certain revenue surplus triggers are met (2025-2035)."
+  },
+  "tax_rate": {
+    "2025": {
+      "rate": 4.4,
+      "rate_low": 4.25,
+      "note": "Flat rate of 4.4% (can drop to 4.25% if revenue triggers met)"
+    },
+    "2024": {
+      "rate": 4.25,
+      "rate_low": 4.25,
+      "note": "Temporarily reduced to 4.25% per Senate Bill 24-228"
+    }
+  },
+  "standard_deductions": {
+    "2025": {
+      "single": 15750,
+      "married_filing_jointly": 31500,
+      "married_filing_separately": 15750,
+      "head_of_household": 23625,
+      "qualifying_widow": 31500
+    },
+    "2024": {
+      "single": 15000,
+      "married_filing_jointly": 30000,
+      "married_filing_separately": 15000,
+      "head_of_household": 22500,
+      "qualifying_widow": 30000
+    }
+  },
+  "filing_statuses": [
+    "single",
+    "married_filing_jointly",
+    "married_filing_separately",
+    "head_of_household",
+    "qualifying_widow"
+  ],
+  "notes": [
+    "Colorado uses a flat tax rate, not progressive brackets",
+    "All taxable income above the standard deduction is taxed at the same rate",
+    "The rate applies to federal taxable income with Colorado-specific adjustments",
+    "For 2025-2035, the rate can drop to 4.25% if revenue surplus triggers are met"
+  ]
+}
