@@ -891,9 +891,7 @@ export function ScenarioModelingPage() {
                         onChange={(e) =>
                           setFormData({ ...formData, monthly_spending: e.target.value })
                         }
-                        className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md"
-                        min="0"
-                        step="100"
+                        className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                     </div>
                   </div>
@@ -911,9 +909,7 @@ export function ScenarioModelingPage() {
                         onChange={(e) =>
                           setFormData({ ...formData, annual_lump_spending: e.target.value })
                         }
-                        className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md"
-                        min="0"
-                        step="1000"
+                        className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                     </div>
                   </div>
@@ -1058,10 +1054,7 @@ export function ScenarioModelingPage() {
                       onChange={(e) =>
                         setFormData({ ...formData, inflation_adjusted_percent: e.target.value })
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                      min="0"
-                      max="100"
-                      step="5"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                     <p className="text-xs text-gray-500 mt-1">
                       Save scenario first to add specific fixed expenses (loans, etc.)
@@ -1079,10 +1072,7 @@ export function ScenarioModelingPage() {
                       onChange={(e) =>
                         setFormData({ ...formData, spending_reduction_percent: e.target.value })
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                      min="0"
-                      max="100"
-                      step="5"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </div>
                   <div>
@@ -1142,8 +1132,7 @@ export function ScenarioModelingPage() {
                         onChange={(e) =>
                           setFormData({ ...formData, custom_return_percent: e.target.value })
                         }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                        step="0.5"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                     </div>
                   )}
@@ -1157,10 +1146,7 @@ export function ScenarioModelingPage() {
                       onChange={(e) =>
                         setFormData({ ...formData, inflation_rate: e.target.value })
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                      min="0"
-                      max="15"
-                      step="0.5"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </div>
                 </div>
