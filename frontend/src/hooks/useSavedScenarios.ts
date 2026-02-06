@@ -27,8 +27,10 @@ export function useUpdateSavedScenario() {
     ({ id, data }: { id: string; data: SavedScenarioUpdate }) =>
       savedScenariosApi.update(id, data),
     {
-      onSuccess: () => {
+      onSuccess: (_, variables) => {
         queryClient.invalidateQueries('saved-scenarios');
+        // Invalidate projection for the updated scenario
+        queryClient.invalidateQueries(['scenario-projection', variables.id]);
       },
     }
   );
@@ -54,6 +56,8 @@ export function useDuplicateSavedScenario() {
         // Invalidate fixed expenses queries since the new scenario will have copied fixed expenses
         queryClient.invalidateQueries('fixed-expenses');
         queryClient.invalidateQueries(['fixed-expenses', newScenario.id]);
+        // Invalidate projection for the new duplicated scenario
+        queryClient.invalidateQueries(['scenario-projection', newScenario.id]);
       },
     }
   );
@@ -85,6 +89,8 @@ export function useCreateOrUpdateDefaultScenario() {
       queryClient.invalidateQueries(['fixed-expenses', scenario.id]);
       // Also invalidate all fixed-expenses queries in case the scenario ID changed
       queryClient.invalidateQueries('fixed-expenses');
+      // Invalidate projection for the default scenario
+      queryClient.invalidateQueries(['scenario-projection', scenario.id]);
     },
   });
 }
