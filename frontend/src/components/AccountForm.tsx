@@ -1,5 +1,4 @@
-import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useState, useEffect } from 'react';
 import type { Account, AccountCreate, AccountType } from '../types/account';
 
 interface AccountFormProps {
@@ -8,116 +7,135 @@ interface AccountFormProps {
   onCancel: () => void;
 }
 
+const ACCOUNT_TYPES: { value: AccountType; label: string }[] = [
+  { value: 'pretax', label: 'Pre-tax (401k, Traditional IRA)' },
+  { value: 'roth', label: 'Roth (Roth IRA, Roth 401k)' },
+  { value: 'taxable', label: 'Taxable (Brokerage)' },
+  { value: 'cash', label: 'Cash (Savings, Money Market)' },
+];
+
 export function AccountForm({ account, onSubmit, onCancel }: AccountFormProps) {
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<AccountCreate>({
-    defaultValues: account
-      ? {
-          name: account.name,
-          account_type: account.account_type,
-          balance: account.balance,
-        }
-      : {
-          name: '',
-          account_type: 'pretax',
-          balance: '0.00',
-        },
-  });
+  const [name, setName] = useState('');
+  const [accountType, setAccountType] = useState<AccountType>('pretax');
+  const [balance, setBalance] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (account) {
-      reset({
-        name: account.name,
-        account_type: account.account_type,
-        balance: account.balance,
-      });
+      setName(account.name);
+      setAccountType(account.account_type);
+      setBalance(account.balance);
+    } else {
+      setName('');
+      setAccountType('pretax');
+      setBalance('');
     }
-  }, [account, reset]);
+  }, [account]);
 
-  const accountTypes: AccountType[] = ['pretax', 'roth', 'taxable', 'cash'];
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    if (!name.trim()) {
+      setError('Account name is required');
+      return;
+    }
+
+    const balanceNum = parseFloat(balance);
+    if (isNaN(balanceNum) || balanceNum < 0) {
+      setError('Please enter a valid balance');
+      return;
+    }
+
+    onSubmit({
+      name: name.trim(),
+      account_type: accountType,
+      balance: balance,
+    });
+  };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-2xl font-bold mb-6 text-gray-900">
+    <div className="bg-white rounded-lg shadow-md p-6">
+      <h2 className="text-xl font-semibold text-gray-900 mb-4">
         {account ? 'Edit Account' : 'Add New Account'}
       </h2>
+      
+      {error && (
+        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          {error}
+        </div>
+      )}
 
-      <div className="mb-4">
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-          Account Name
-        </label>
-        <input
-          {...register('name', { required: 'Account name is required' })}
-          type="text"
-          id="name"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-        />
-        {errors.name && (
-          <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
-        )}
-      </div>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+            Account Name
+          </label>
+          <input
+            type="text"
+            id="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="e.g., Fidelity 401k"
+          />
+        </div>
 
-      <div className="mb-4">
-        <label htmlFor="account_type" className="block text-sm font-medium text-gray-700 mb-2">
-          Account Type
-        </label>
-        <select
-          {...register('account_type', { required: 'Account type is required' })}
-          id="account_type"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-        >
-          {accountTypes.map((type) => (
-            <option key={type} value={type}>
-              {type.charAt(0).toUpperCase() + type.slice(1)}
-            </option>
-          ))}
-        </select>
-        {errors.account_type && (
-          <p className="mt-1 text-sm text-red-600">{errors.account_type.message}</p>
-        )}
-      </div>
+        <div>
+          <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">
+            Account Type
+          </label>
+          <select
+            id="type"
+            value={accountType}
+            onChange={(e) => setAccountType(e.target.value as AccountType)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            {ACCOUNT_TYPES.map((type) => (
+              <option key={type.value} value={type.value}>
+                {type.label}
+              </option>
+            ))}
+          </select>
+        </div>
 
-      <div className="mb-6">
-        <label htmlFor="balance" className="block text-sm font-medium text-gray-700 mb-2">
-          Balance
-        </label>
-        <input
-          {...register('balance', {
-            required: 'Balance is required',
-            pattern: {
-              value: /^\d+(\.\d{1,2})?$/,
-              message: 'Invalid balance format',
-            },
-          })}
-          type="text"
-          id="balance"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-          placeholder="0.00"
-        />
-        {errors.balance && (
-          <p className="mt-1 text-sm text-red-600">{errors.balance.message}</p>
-        )}
-      </div>
+        <div>
+          <label htmlFor="balance" className="block text-sm font-medium text-gray-700 mb-1">
+            Balance
+          </label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+              $
+            </span>
+            <input
+              type="number"
+              id="balance"
+              value={balance}
+              onChange={(e) => setBalance(e.target.value)}
+              className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="0.00"
+              min="0"
+              step="0.01"
+            />
+          </div>
+        </div>
 
-      <div className="flex gap-4">
-        <button
-          type="submit"
-          className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 font-medium"
-        >
-          {account ? 'Update Account' : 'Create Account'}
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="flex-1 bg-gray-200 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 font-medium"
-        >
-          Cancel
-        </button>
-      </div>
-    </form>
+        <div className="flex gap-4 pt-4">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-200 font-medium"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 font-medium"
+          >
+            {account ? 'Update Account' : 'Add Account'}
+          </button>
+        </div>
+      </form>
+    </div>
   );
 }

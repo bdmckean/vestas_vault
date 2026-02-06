@@ -35,6 +35,7 @@ input_chatgpt.md
 input_gemini.md
 COMPLETE_RETIREMENT_ANALYSIS.md
 backend/scripts/bootstrap_accounts.csv
+backend/scripts/bootstrap_holdings.csv
 
 # Node
 node_modules/

@@ -33,6 +33,12 @@ A Docker-based retirement planning application with React frontend and FastAPI b
 - **Scenario Modeling**: Custom scenarios with blended returns, contributions, CSV/JSON export
 - **Planned Spending**: Monthly spending amount, annual lump sum
 - **Tax Configuration**: Filing status, deductions with senior deduction calculations
+- **Other Income Sources**: ✅ COMPLETE - CRUD operations, income type categorization, date ranges, COLA adjustments, month-by-month projections
+- **Holdings**: Portfolio holdings within accounts, asset class tracking, ticker symbols
+- **Fixed Expenses**: Scenario-specific fixed expenses (not subject to inflation)
+- **Planned Fixed Expenses**: Global fixed expenses that apply to all scenarios
+- **Saved Scenarios**: Persistent scenario storage with full CRUD, duplication, and projection generation
+- **Retirement Projections**: Year-by-year portfolio projections combining accounts, SS, other income, spending, and taxes
 
 ### Data Files
 - `data/investment_return_projections.json` - 10-year forecasts from Vanguard, BlackRock, etc.
@@ -42,7 +48,38 @@ A Docker-based retirement planning application with React frontend and FastAPI b
 
 ---
 
-## Next Feature: Other Income Sources
+## Missing Features (From COMPLETE_RETIREMENT_ANALYSIS.md)
+
+The following features are documented in the retirement analysis but not yet implemented:
+
+- **Partner/Spouse Social Security**: Support for dual Social Security benefits
+  - Spousal benefits (up to 50% of higher earner's benefit)
+  - Survivor benefits (up to 100% of deceased spouse's benefit)
+  - Coordination strategies (one claims early, one delays)
+  - Dual benefit tracking (both spouses have their own benefits)
+- **Account Type Segregation**: Separate tracking of pretax, Roth, taxable, and cash balances in projections
+- **Bucket Strategy**: Time-based return rates (3.5% years 1-3, 5.25% years 4-7, 6% years 8-10, 10% years 11-30)
+- **Withdrawal Sequencing**: Withdraw 100% from pretax first, preserve Roth accounts
+- **Roth Conversions**: Track and model annual conversions from pretax to Roth with tax implications
+- **RMD Calculations**: Required Minimum Distributions starting at age 75
+- **Medicare IRMAA**: Medicare surcharge calculations based on MAGI
+- **Tax Bracket Indexing**: Annual inflation adjustments to tax brackets and deductions
+- **Time-Series Visualizations**: Graphs showing projections over time
+  - Social Security income over time (with COLA adjustments)
+  - Withdrawals by account type over time (pretax, Roth, taxable, cash)
+  - Taxes paid over time (federal, state, total)
+  - Available spending over time (after taxes)
+  - Distance to next tax bracket over time (how much room until bracket change)
+  - Portfolio balance over time (total and by account type)
+  - Income vs spending over time (gap analysis)
+
+See `IMPLEMENTATION_ROADMAP.md` for detailed implementation plan.
+
+---
+
+## Other Income Sources ✅ COMPLETE
+
+**Status**: Fully implemented with all planned features.
 
 ### Purpose
 Allow users to enter income from sources beyond Social Security:
@@ -211,14 +248,22 @@ retirement_planner/
 │   │   │   ├── social_security.py
 │   │   │   ├── planned_spending.py
 │   │   │   ├── tax_config.py
-│   │   │   └── other_income.py        # NEW
+│   │   │   ├── other_income.py        # ✅ COMPLETE
+│   │   │   ├── holding.py             # ✅ COMPLETE
+│   │   │   ├── fixed_expense.py       # ✅ COMPLETE
+│   │   │   ├── planned_fixed_expense.py # ✅ COMPLETE
+│   │   │   └── scenario.py            # ✅ COMPLETE (SavedScenario)
 │   │   ├── schemas/
 │   │   │   ├── __init__.py
 │   │   │   ├── account.py
 │   │   │   ├── social_security.py
 │   │   │   ├── planned_spending.py
 │   │   │   ├── tax_config.py
-│   │   │   └── other_income.py        # NEW
+│   │   │   ├── other_income.py        # ✅ COMPLETE
+│   │   │   ├── holding.py             # ✅ COMPLETE
+│   │   │   ├── fixed_expense.py       # ✅ COMPLETE
+│   │   │   ├── planned_fixed_expense.py # ✅ COMPLETE
+│   │   │   └── scenario.py            # ✅ COMPLETE
 │   │   ├── api/v1/
 │   │   │   ├── accounts.py
 │   │   │   ├── social_security.py
@@ -227,7 +272,11 @@ retirement_planner/
 │   │   │   ├── planned_spending.py
 │   │   │   ├── tax_config.py
 │   │   │   ├── tax_tables.py
-│   │   │   ├── other_income.py        # NEW
+│   │   │   ├── other_income.py        # ✅ COMPLETE
+│   │   │   ├── holdings.py           # ✅ COMPLETE
+│   │   │   ├── fixed_expenses.py      # ✅ COMPLETE
+│   │   │   ├── planned_fixed_expenses.py # ✅ COMPLETE
+│   │   │   ├── saved_scenarios.py    # ✅ COMPLETE
 │   │   │   └── router.py
 │   │   ├── services/
 │   │   │   ├── account_service.py
@@ -236,13 +285,18 @@ retirement_planner/
 │   │   │   ├── scenario_service.py
 │   │   │   ├── planned_spending_service.py
 │   │   │   ├── tax_config_service.py
-│   │   │   └── other_income_service.py # NEW
+│   │   │   ├── other_income_service.py # ✅ COMPLETE
+│   │   │   ├── holding_service.py      # ✅ COMPLETE
+│   │   │   ├── retirement_scenario_service.py # ✅ COMPLETE
+│   │   │   └── scenario_service.py    # ✅ COMPLETE
 │   │   ├── repositories/
 │   │   │   ├── account_repository.py
 │   │   │   ├── social_security_repository.py
 │   │   │   ├── planned_spending_repository.py
 │   │   │   ├── tax_config_repository.py
-│   │   │   └── other_income_repository.py # NEW
+│   │   │   ├── other_income_repository.py # ✅ COMPLETE
+│   │   │   ├── holding_repository.py     # ✅ COMPLETE
+│   │   │   └── scenario_repository.py    # ✅ COMPLETE
 │   │   └── utils/
 │   │       └── fra_calculator.py
 │   ├── tests/
@@ -255,7 +309,7 @@ retirement_planner/
 │   │   │   ├── AccountCard.tsx
 │   │   │   ├── AccountForm.tsx
 │   │   │   ├── Navigation.tsx
-│   │   │   └── OtherIncomeForm.tsx     # NEW
+│   │   │   └── OtherIncomeForm.tsx     # ✅ COMPLETE
 │   │   ├── pages/
 │   │   │   ├── DashboardPage.tsx
 │   │   │   ├── AccountsPage.tsx
@@ -264,7 +318,8 @@ retirement_planner/
 │   │   │   ├── ScenarioModelingPage.tsx
 │   │   │   ├── PlannedSpendingPage.tsx
 │   │   │   ├── TaxPage.tsx
-│   │   │   └── OtherIncomePage.tsx     # NEW
+│   │   │   ├── OtherIncomePage.tsx     # ✅ COMPLETE
+│   │   │   └── PortfolioPage.tsx       # ✅ COMPLETE
 │   │   ├── hooks/
 │   │   │   ├── useAccounts.ts
 │   │   │   ├── useSocialSecurity.ts
@@ -272,7 +327,11 @@ retirement_planner/
 │   │   │   ├── useScenarios.ts
 │   │   │   ├── usePlannedSpending.ts
 │   │   │   ├── useTaxConfig.ts
-│   │   │   └── useOtherIncome.ts       # NEW
+│   │   │   ├── useOtherIncome.ts       # ✅ COMPLETE
+│   │   │   ├── useHoldings.ts          # ✅ COMPLETE
+│   │   │   ├── useFixedExpenses.ts     # ✅ COMPLETE
+│   │   │   ├── usePlannedFixedExpenses.ts # ✅ COMPLETE
+│   │   │   └── useSavedScenarios.ts    # ✅ COMPLETE
 │   │   ├── services/
 │   │   │   ├── api.ts
 │   │   │   ├── social_security_api.ts
@@ -280,7 +339,11 @@ retirement_planner/
 │   │   │   ├── scenario_api.ts
 │   │   │   ├── planned_spending_api.ts
 │   │   │   ├── tax_config_api.ts
-│   │   │   └── other_income_api.ts     # NEW
+│   │   │   ├── other_income_api.ts     # ✅ COMPLETE
+│   │   │   ├── holdings_api.ts         # ✅ COMPLETE
+│   │   │   ├── fixed_expenses_api.ts   # ✅ COMPLETE
+│   │   │   ├── planned_fixed_expenses_api.ts # ✅ COMPLETE
+│   │   │   └── saved_scenarios_api.ts  # ✅ COMPLETE
 │   │   ├── types/
 │   │   │   ├── account.ts
 │   │   │   ├── social_security.ts
@@ -288,7 +351,11 @@ retirement_planner/
 │   │   │   ├── scenario.ts
 │   │   │   ├── planned_spending.ts
 │   │   │   ├── tax_config.ts
-│   │   │   └── other_income.ts         # NEW
+│   │   │   ├── other_income.ts         # ✅ COMPLETE
+│   │   │   ├── holding.ts               # ✅ COMPLETE
+│   │   │   ├── fixed_expense.ts         # ✅ COMPLETE
+│   │   │   ├── planned_fixed_expense.ts # ✅ COMPLETE
+│   │   │   └── saved_scenario.ts        # ✅ COMPLETE
 │   │   ├── App.tsx
 │   │   └── main.tsx
 │   ├── package.json
@@ -323,27 +390,30 @@ retirement_planner/
 - Asset class projections from JSON files
 - Scenario modeling with export
 
-### Phase 3: Other Income Sources ← NEXT
-- Other income CRUD
-- Income type categorization
-- Date range support (start/end month-year)
-- COLA adjustments
-- Month-by-month projections
-- Integration with dashboard
+### Phase 3: Other Income Sources ✅ COMPLETE
+- Other income CRUD ✅
+- Income type categorization ✅
+- Date range support (start/end month-year) ✅
+- COLA adjustments ✅
+- Month-by-month projections ✅
+- Integration with retirement projections ✅
 
-### Phase 4: Retirement Projection Engine
-- Combine all inputs: accounts, SS, other income, spending, taxes
-- Year-by-year portfolio projections
-- Multiple withdrawal strategies (buckets, percentage-based)
-- Inflation adjustments
-- Success probability calculations
+### Phase 4: Retirement Projection Engine ⚠️ PARTIAL
+- ✅ Combine all inputs: accounts, SS, other income, spending, taxes
+- ✅ Year-by-year portfolio projections
+- ✅ Inflation adjustments
+- ✅ Fixed expenses support
+- ❌ Multiple withdrawal strategies (buckets, percentage-based) - **MISSING**
+- ❌ Account type segregation in projections - **MISSING**
+- ❌ Withdrawal sequencing (pretax first) - **MISSING**
+- ❌ Success probability calculations - **MISSING**
 
-### Phase 5: Advanced Analysis
-- Monte Carlo simulations
-- Roth conversion optimization
-- RMD calculations
-- Guardrail rules (spending adjustments based on portfolio performance)
-- What-if scenario comparisons
+### Phase 5: Advanced Analysis ❌ NOT STARTED
+- ❌ Monte Carlo simulations
+- ❌ Roth conversion optimization
+- ❌ RMD calculations
+- ❌ Guardrail rules (spending adjustments based on portfolio performance)
+- ❌ What-if scenario comparisons
 
 ---
 
@@ -388,3 +458,129 @@ After implementing Other Income, the Dashboard should show:
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## Time-Series Visualization Feature (Planned)
+
+### Purpose
+Provide visual graphs showing retirement projections over time to help users understand trends, identify potential issues, and optimize their retirement strategy.
+
+### Proposed Graphs
+
+#### 1. Social Security Income Over Time
+- **X-axis**: Years (or age)
+- **Y-axis**: Monthly/annual Social Security amount
+- **Features**:
+  - Show COLA adjustments over time
+  - Highlight when SS starts
+  - Show different scenarios (age 66, 67, 70)
+  - Include partner/spouse SS when implemented
+
+#### 2. Withdrawals by Account Type Over Time
+- **X-axis**: Years (or age)
+- **Y-axis**: Withdrawal amount (annual)
+- **Stacked area chart** showing:
+  - Pretax withdrawals (blue)
+  - Roth withdrawals (green)
+  - Taxable withdrawals (orange)
+  - Cash withdrawals (gray)
+- **Features**:
+  - Show withdrawal sequencing strategy
+  - Highlight when account types are depleted
+  - Show Roth preservation strategy
+
+#### 3. Taxes Paid Over Time
+- **X-axis**: Years (or age)
+- **Y-axis**: Tax amount (annual)
+- **Stacked bar chart** showing:
+  - Federal taxes
+  - State taxes
+  - Total taxes
+- **Features**:
+  - Show tax bracket changes
+  - Highlight high-tax years
+  - Show impact of Roth conversions on taxes
+
+#### 4. Available Spending Over Time
+- **X-axis**: Years (or age)
+- **Y-axis**: Spending amount (annual)
+- **Line chart** showing:
+  - Planned spending
+  - Available spending (after taxes)
+  - Gap (if spending exceeds available)
+- **Features**:
+  - Show spending reduction points
+  - Highlight years with spending constraints
+  - Compare income vs spending
+
+#### 5. Distance to Next Tax Bracket Over Time
+- **X-axis**: Years (or age)
+- **Y-axis**: Dollars remaining until next bracket
+- **Line chart** showing:
+  - Current taxable income
+  - Next tax bracket threshold
+  - Room available (threshold - current income)
+- **Features**:
+  - Help optimize Roth conversions
+  - Show tax optimization opportunities
+  - Highlight years with room for conversions
+
+#### 6. Portfolio Balance Over Time
+- **X-axis**: Years (or age)
+- **Y-axis**: Portfolio balance (dollars)
+- **Multi-line chart** showing:
+  - Total portfolio balance
+  - Pretax balance
+  - Roth balance
+  - Taxable balance
+  - Cash balance
+- **Features**:
+  - Show portfolio growth/decline
+  - Highlight depletion points
+  - Show impact of withdrawals
+
+#### 7. Income vs Spending Over Time (Gap Analysis)
+- **X-axis**: Years (or age)
+- **Y-axis**: Amount (annual)
+- **Stacked area chart** showing:
+  - Total income (SS + other income)
+  - Spending needs
+  - Gap (withdrawals required)
+- **Features**:
+  - Show when portfolio withdrawals are needed
+  - Highlight years with large gaps
+  - Show impact of SS timing
+
+### Implementation Requirements
+
+**Frontend:**
+- Install charting library (e.g., Recharts, Chart.js, or Plotly)
+- Create visualization components
+- Add chart controls (zoom, filter by year range, toggle series)
+- Add export functionality (PNG, PDF)
+
+**Backend:**
+- Ensure projection data includes all necessary fields
+- Add endpoint for chart data (if needed for optimization)
+- Include tax bracket thresholds in projection data
+
+**Data Requirements:**
+- Year-by-year projection data already available
+- Need to add: tax bracket thresholds, account type breakdowns
+- Need to calculate: distance to next bracket, available spending
+
+### User Experience
+
+**Location:**
+- New "Projections" or "Charts" tab in Scenario Modeling page
+- Or dedicated "Visualizations" page
+- Or expandable section in scenario details
+
+**Interactions:**
+- Select scenario(s) to visualize
+- Toggle between different graphs
+- Filter by year range
+- Hover for detailed tooltips
+- Export charts as images
+- Compare multiple scenarios side-by-side

@@ -29,16 +29,22 @@ export function Navigation() {
                 Accounts
               </Link>
               <Link
+                to="/portfolio"
+                className={`px-3 py-2 rounded-md text-sm font-medium ${isActive('/portfolio')}`}
+              >
+                Portfolio
+              </Link>
+              <Link
                 to="/social-security"
                 className={`px-3 py-2 rounded-md text-sm font-medium ${isActive('/social-security')}`}
               >
-                Social Security
+                SS
               </Link>
               <Link
                 to="/other-income"
                 className={`px-3 py-2 rounded-md text-sm font-medium ${isActive('/other-income')}`}
               >
-                Other Income
+                Income
               </Link>
               <Link
                 to="/planned-spending"

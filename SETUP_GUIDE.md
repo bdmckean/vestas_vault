@@ -127,22 +127,53 @@ docker-compose up frontend
 
 ## Next Steps
 
-Once Phase 1 (Account Management) is working:
+### ✅ Completed Features
 
-1. **Phase 2**: Add asset class return projections
-   - Load from `investment_return_projections.json`
-   - Create projection service
-   - Add projection endpoints
+The following features are already implemented:
 
-2. **Phase 3**: Add withdrawal planning
-   - Social Security calculations
-   - Withdrawal strategy models
-   - Tax calculations
+1. **Phase 2**: Asset class return projections ✅
+   - Loads from `investment_return_projections.json`
+   - Projection service implemented
+   - Projection endpoints available
 
-3. **Phase 4**: Portfolio projections
-   - Multi-year projections
-   - Scenario analysis
-   - Guardrails implementation
+2. **Phase 3**: Other Income Sources ✅
+   - Full CRUD operations
+   - Month-by-month projections
+   - COLA adjustments
+
+3. **Additional Features**: ✅
+   - Portfolio Holdings tracking
+   - Fixed Expenses (scenario-specific)
+   - Planned Fixed Expenses (global)
+   - Saved Scenarios with projections
+   - Retirement projection engine (combines accounts, SS, other income, spending, taxes)
+
+### ❌ Missing Features
+
+The following features from `COMPLETE_RETIREMENT_ANALYSIS.md` are not yet implemented:
+
+1. **Partner/Spouse Social Security**: Support for dual Social Security benefits
+   - Spousal benefits (up to 50% of higher earner's benefit)
+   - Survivor benefits (up to 100% of deceased spouse's benefit)
+   - Coordination strategies (one claims early, one delays)
+   - Dual benefit tracking (both spouses have their own benefits)
+2. **Time-Series Visualizations**: Graphs showing projections over time
+   - Social Security income over time (with COLA adjustments)
+   - Withdrawals by account type over time (pretax, Roth, taxable, cash)
+   - Taxes paid over time (federal, state, total)
+   - Available spending over time (after taxes)
+   - Distance to next tax bracket over time (how much room until bracket change)
+   - Portfolio balance over time (total and by account type)
+   - Income vs spending over time (gap analysis)
+3. **Account Type Segregation**: Separate tracking of pretax, Roth, taxable, cash in projections
+4. **Bucket Strategy**: Time-based return rates (3.5% years 1-3, 5.25% years 4-7, etc.)
+5. **Withdrawal Sequencing**: Withdraw 100% from pretax first, preserve Roth
+6. **Roth Conversions**: Track and model annual conversions
+7. **RMD Calculations**: Required Minimum Distributions starting at age 75
+8. **Medicare IRMAA**: Surcharge calculations based on MAGI
+9. **Tax Bracket Indexing**: Annual inflation adjustments
+
+See `IMPLEMENTATION_ROADMAP.md` for detailed implementation plan (9 phases, 54 tasks).
 
 ## Code Structure Benefits
 

@@ -6,6 +6,7 @@ import { AssetProjectionsPage } from './pages/AssetProjectionsPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { OtherIncomePage } from './pages/OtherIncomePage';
 import { PlannedSpendingPage } from './pages/PlannedSpendingPage';
+import { PortfolioPage } from './pages/PortfolioPage';
 import { ScenarioModelingPage } from './pages/ScenarioModelingPage';
 import { SocialSecurityPage } from './pages/SocialSecurityPage';
 import { TaxPage } from './pages/TaxPage';
@@ -21,6 +22,7 @@ function App() {
           <Routes>
             <Route path="/" element={<DashboardPage />} />
             <Route path="/accounts" element={<AccountsPage />} />
+            <Route path="/portfolio" element={<PortfolioPage />} />
             <Route path="/social-security" element={<SocialSecurityPage />} />
             <Route path="/other-income" element={<OtherIncomePage />} />
             <Route path="/planned-spending" element={<PlannedSpendingPage />} />

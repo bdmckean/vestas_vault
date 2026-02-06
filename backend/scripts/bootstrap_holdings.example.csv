@@ -1,0 +1,6 @@
+account_name,asset_class,ticker,name,amount,notes
+My 401k,total_us_stock,VTI,Vanguard Total Stock Market ETF,50000.00,50% US Stocks
+My 401k,total_foreign_stock,VXUS,Vanguard Total International Stock ETF,30000.00,30% International
+My 401k,bonds,BND,Vanguard Total Bond Market ETF,20000.00,20% Bonds
+Roth IRA,total_us_stock,VOO,Vanguard S&P 500 ETF,15000.00,60% S&P 500
+Roth IRA,us_small_cap_value,VBR,Vanguard Small-Cap Value ETF,10000.00,40% Small Cap Value

@@ -99,3 +99,38 @@
 ## Status: ✅ PHASE 1 COMPLETE
 
 All Phase 1 requirements have been met, plus additional features for Social Security setup and dashboard navigation.
+
+## Additional Features Beyond Phase 1
+
+The following features have been implemented beyond the original Phase 1 scope:
+
+### ✅ Phase 2 Features (Complete)
+- Asset class return projections (10-year forecasts, historical averages)
+- Planned spending configuration
+- Tax configuration with senior deductions
+- Scenario modeling with custom asset allocations
+
+### ✅ Phase 3 Features (Complete)
+- Other Income Sources (pensions, rental, employment, etc.)
+- Portfolio Holdings tracking within accounts
+- Fixed Expenses (scenario-specific, not subject to inflation)
+- Planned Fixed Expenses (global, calendar year-based)
+- Saved Scenarios with full CRUD and projection generation
+
+### Current Implementation Status
+- **Total Features Implemented**: 15+ major features
+- **API Endpoints**: 50+ endpoints across 10+ resource types
+- **Frontend Pages**: 9 pages (Dashboard, Accounts, Portfolio, Social Security, Other Income, Planned Spending, Tax, Asset Projections, Scenario Modeling)
+
+### Missing Features
+See `IMPLEMENTATION_ROADMAP.md` for features from `COMPLETE_RETIREMENT_ANALYSIS.md` that are not yet implemented:
+- **Partner/Spouse Social Security**: Dual Social Security benefit tracking, spousal benefits, survivor benefits
+- **Time-Series Visualizations**: Graphs showing projections over time
+  - Social Security income, withdrawals by account type, taxes, spending, tax bracket distance, portfolio balance
+- Account type segregation in projections
+- Bucket strategy (time-based returns)
+- Withdrawal sequencing
+- Roth conversions
+- RMD calculations
+- Medicare IRMAA
+- Tax bracket indexing

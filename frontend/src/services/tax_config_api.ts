@@ -79,4 +79,34 @@ export const taxConfigApi = {
     );
     return response.data;
   },
+
+  getEstimatedAnnualIncome: async (): Promise<EstimatedAnnualIncome> => {
+    const response = await apiClient.get<EstimatedAnnualIncome>('/tax-config/estimated-annual-income');
+    return response.data;
+  },
 };
+
+export interface EstimatedAnnualIncome {
+  social_security: {
+    monthly_amount: string;
+    annual_amount: string;
+    note: string;
+  };
+  other_income: {
+    monthly_amount: string;
+    annual_amount: string;
+    taxable_annual_amount: string;
+    sources: {
+      name: string;
+      income_type: string;
+      monthly_amount: string;
+      annual_amount: string;
+      is_taxable: boolean;
+    }[];
+  };
+  total: {
+    monthly_amount: string;
+    annual_amount: string;
+  };
+  note: string;
+}

@@ -1,6 +1,21 @@
 """Pydantic schemas for API validation."""
 
 from app.schemas.account import Account, AccountCreate, AccountUpdate
+from app.schemas.fixed_expense import (
+    FixedExpense,
+    FixedExpenseCreate,
+    FixedExpenseSummary,
+    FixedExpenseUpdate,
+)
+from app.schemas.holding import (
+    AccountHoldingsSummary,
+    AssetClass,
+    Holding,
+    HoldingCreate,
+    HoldingUpdate,
+    HoldingWithAllocation,
+    PortfolioAllocation,
+)
 from app.schemas.other_income import (
     IncomeType,
     OtherIncome,
@@ -8,6 +23,12 @@ from app.schemas.other_income import (
     OtherIncomeProjection,
     OtherIncomeSummary,
     OtherIncomeUpdate,
+)
+from app.schemas.planned_fixed_expense import (
+    PlannedFixedExpense,
+    PlannedFixedExpenseCreate,
+    PlannedFixedExpenseSummary,
+    PlannedFixedExpenseUpdate,
 )
 from app.schemas.planned_spending import (
     PlannedSpending,
@@ -37,6 +58,17 @@ __all__ = [
     "Account",
     "AccountCreate",
     "AccountUpdate",
+    "AssetClass",
+    "FixedExpense",
+    "FixedExpenseCreate",
+    "FixedExpenseUpdate",
+    "FixedExpenseSummary",
+    "Holding",
+    "HoldingCreate",
+    "HoldingUpdate",
+    "HoldingWithAllocation",
+    "AccountHoldingsSummary",
+    "PortfolioAllocation",
     "IncomeType",
     "OtherIncome",
     "OtherIncomeCreate",
@@ -47,6 +79,10 @@ __all__ = [
     "SocialSecurityCreate",
     "SocialSecurityUpdate",
     "SocialSecurityPaymentProjection",
+    "PlannedFixedExpense",
+    "PlannedFixedExpenseCreate",
+    "PlannedFixedExpenseSummary",
+    "PlannedFixedExpenseUpdate",
     "PlannedSpending",
     "PlannedSpendingCreate",
     "PlannedSpendingUpdate",

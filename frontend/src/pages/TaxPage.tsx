@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTaxConfig, useCreateTaxConfig, useUpdateTaxConfig, useDeleteTaxConfig } from '../hooks/useTaxConfig';
 import { useStandardDeductions } from '../hooks/useTaxTables';
-import { taxConfigApi } from '../services/tax_config_api';
+import { taxConfigApi, EstimatedAnnualIncome } from '../services/tax_config_api';
 import type { FilingStatus, SeniorDeductionBreakdown } from '../types/tax_config';
 
 const FILING_STATUS_OPTIONS: { value: FilingStatus; label: string }[] = [
@@ -28,9 +28,31 @@ export function TaxPage() {
   const [taxYear, setTaxYear] = useState(2026);
   const [seniorDeductions, setSeniorDeductions] = useState<SeniorDeductionBreakdown | null>(null);
   const [calculatingSenior, setCalculatingSenior] = useState(false);
+  const [estimatedIncome, setEstimatedIncome] = useState<EstimatedAnnualIncome | null>(null);
+  const [loadingEstimatedIncome, setLoadingEstimatedIncome] = useState(false);
 
   // Load standard deductions for selected year
   const { data: standardDeductionsData } = useStandardDeductions(taxYear);
+
+  // Fetch estimated annual income from SS and Other Income
+  useEffect(() => {
+    const fetchEstimatedIncome = async () => {
+      setLoadingEstimatedIncome(true);
+      try {
+        const data = await taxConfigApi.getEstimatedAnnualIncome();
+        setEstimatedIncome(data);
+        // Auto-populate annual income if not already set
+        if (!annualIncome && data.total.annual_amount && parseFloat(data.total.annual_amount) > 0) {
+          setAnnualIncome(data.total.annual_amount);
+        }
+      } catch (err) {
+        console.error('Error fetching estimated income:', err);
+      } finally {
+        setLoadingEstimatedIncome(false);
+      }
+    };
+    fetchEstimatedIncome();
+  }, []);
 
   // Load existing data when it's available
   useEffect(() => {
@@ -283,26 +305,83 @@ export function TaxPage() {
             )}
           </div>
 
-          {/* Annual Income */}
+          {/* Estimated Annual Income */}
+          {estimatedIncome && parseFloat(estimatedIncome.total.annual_amount) > 0 && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <h3 className="text-sm font-medium text-gray-900 mb-3">
+                Estimated Annual Income (from configured sources)
+              </h3>
+              <div className="space-y-2">
+                {parseFloat(estimatedIncome.social_security.annual_amount) > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Social Security (at FRA):</span>
+                    <span className="font-medium">{formatCurrency(estimatedIncome.social_security.annual_amount)}</span>
+                  </div>
+                )}
+                {estimatedIncome.other_income.sources.map((source, idx) => (
+                  <div key={idx} className="flex justify-between">
+                    <span className="text-gray-600">
+                      {source.name} ({source.income_type})
+                      {!source.is_taxable && <span className="text-green-600 ml-1">(tax-free)</span>}:
+                    </span>
+                    <span className="font-medium">{formatCurrency(source.annual_amount)}</span>
+                  </div>
+                ))}
+                <div className="flex justify-between pt-2 border-t border-green-200">
+                  <span className="text-lg font-semibold text-gray-900">Total Estimated Income:</span>
+                  <span className="text-lg font-bold text-green-600">
+                    {formatCurrency(estimatedIncome.total.annual_amount)}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-600 mt-2">{estimatedIncome.note}</p>
+                <button
+                  type="button"
+                  onClick={() => setAnnualIncome(estimatedIncome.total.annual_amount)}
+                  className="mt-2 w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm font-medium"
+                >
+                  Use Calculated Income ({formatCurrency(estimatedIncome.total.annual_amount)})
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Annual Income Override */}
           <div>
             <label htmlFor="annual_income" className="block text-sm font-medium text-gray-700 mb-2">
-              Annual Income (for bonus senior deduction eligibility)
+              Annual Income for Senior Deduction Eligibility
+              {estimatedIncome && parseFloat(estimatedIncome.total.annual_amount) > 0 && (
+                <span className="text-green-600 ml-2">(auto-calculated above)</span>
+              )}
             </label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
-              <input
-                type="number"
-                id="annual_income"
-                value={annualIncome}
-                onChange={(e) => setAnnualIncome(e.target.value)}
-                className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="0.00"
-                min="0"
-                step="1000"
-              />
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                <input
+                  type="number"
+                  id="annual_income"
+                  value={annualIncome}
+                  onChange={(e) => setAnnualIncome(e.target.value)}
+                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="0.00"
+                  min="0"
+                  step="1000"
+                />
+              </div>
+              {estimatedIncome && parseFloat(estimatedIncome.total.annual_amount) > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setAnnualIncome(estimatedIncome.total.annual_amount)}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm font-medium whitespace-nowrap"
+                >
+                  Reset to Calculated
+                </button>
+              )}
             </div>
             <p className="mt-1 text-sm text-gray-500">
-              Annual income (used to determine eligibility for $6,000 bonus senior deduction if under $150k)
+              Used to determine eligibility for $6,000 bonus senior deduction (if under $150k). 
+              {!estimatedIncome || parseFloat(estimatedIncome.total.annual_amount) === 0 
+                ? ' Configure Social Security and Other Income to auto-calculate.'
+                : ' You can override the calculated value if needed.'}
             </p>
           </div>
 
