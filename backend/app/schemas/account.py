@@ -18,6 +18,12 @@ class AccountBase(BaseModel):
         description="Account balance",
         decimal_places=2,
     )
+    cost_basis: Decimal | None = Field(
+        default=None,
+        ge=0,
+        description="Cost basis for taxable accounts (original purchase price). Used to calculate taxable gains on withdrawals. Only relevant for taxable accounts.",
+        decimal_places=2,
+    )
 
     @field_validator("account_type")
     @classmethod
@@ -41,6 +47,7 @@ class AccountUpdate(BaseModel):
     name: str | None = Field(None, min_length=1, max_length=255)
     account_type: str | None = None
     balance: Decimal | None = Field(None, ge=0, decimal_places=2)
+    cost_basis: Decimal | None = Field(None, ge=0, decimal_places=2)
 
     @field_validator("account_type")
     @classmethod

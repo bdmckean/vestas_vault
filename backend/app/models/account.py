@@ -20,6 +20,12 @@ class Account(Base):
     name = Column(String(255), nullable=False)
     account_type = Column(String(50), nullable=False)  # pretax, roth, taxable, cash
     balance = Column(Numeric(15, 2), nullable=False, default=Decimal("0.00"))
+    cost_basis = Column(
+        Numeric(15, 2),
+        nullable=True,
+        default=None,
+        comment="Cost basis for taxable accounts (original purchase price). Used to calculate taxable gains on withdrawals.",
+    )
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 

@@ -693,6 +693,18 @@ export function ScenarioModelingPage() {
                       <th className="px-2 py-2 text-right text-xs font-medium text-gray-500">
                         Start Bal
                       </th>
+                      <th className="px-2 py-2 text-right text-xs font-medium text-gray-500 bg-blue-50">
+                        Pretax
+                      </th>
+                      <th className="px-2 py-2 text-right text-xs font-medium text-gray-500 bg-green-50">
+                        Roth
+                      </th>
+                      <th className="px-2 py-2 text-right text-xs font-medium text-gray-500 bg-purple-50">
+                        Taxable
+                      </th>
+                      <th className="px-2 py-2 text-right text-xs font-medium text-gray-500 bg-gray-50">
+                        Cash
+                      </th>
                       <th className="px-2 py-2 text-right text-xs font-medium text-gray-500">
                         SS Income
                       </th>
@@ -723,6 +735,18 @@ export function ScenarioModelingPage() {
                       <th className="px-2 py-2 text-right text-xs font-medium text-gray-500">
                         End Bal
                       </th>
+                      <th className="px-2 py-2 text-right text-xs font-medium text-gray-500 bg-blue-50">
+                        Pretax
+                      </th>
+                      <th className="px-2 py-2 text-right text-xs font-medium text-gray-500 bg-green-50">
+                        Roth
+                      </th>
+                      <th className="px-2 py-2 text-right text-xs font-medium text-gray-500 bg-purple-50">
+                        Taxable
+                      </th>
+                      <th className="px-2 py-2 text-right text-xs font-medium text-gray-500 bg-gray-50">
+                        Cash
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
@@ -733,8 +757,20 @@ export function ScenarioModelingPage() {
                       >
                         <td className="px-2 py-2">{p.calendar_year}</td>
                         <td className="px-2 py-2">{p.age}</td>
-                        <td className="px-2 py-2 text-right">
+                        <td className="px-2 py-2 text-right font-medium">
                           {formatCurrency(p.starting_balance)}
+                        </td>
+                        <td className="px-2 py-2 text-right text-blue-600 text-xs">
+                          {formatCurrency(p.pretax_starting_balance)}
+                        </td>
+                        <td className="px-2 py-2 text-right text-green-600 text-xs">
+                          {formatCurrency(p.roth_starting_balance)}
+                        </td>
+                        <td className="px-2 py-2 text-right text-purple-600 text-xs">
+                          {formatCurrency(p.taxable_starting_balance)}
+                        </td>
+                        <td className="px-2 py-2 text-right text-gray-600 text-xs">
+                          {formatCurrency(p.cash_starting_balance)}
                         </td>
                         <td className="px-2 py-2 text-right text-green-600">
                           {formatCurrency(p.social_security_income)}
@@ -765,6 +801,18 @@ export function ScenarioModelingPage() {
                         </td>
                         <td className="px-2 py-2 text-right font-medium">
                           {formatCurrency(p.ending_balance)}
+                        </td>
+                        <td className="px-2 py-2 text-right text-blue-600 text-xs">
+                          {formatCurrency(p.pretax_ending_balance)}
+                        </td>
+                        <td className="px-2 py-2 text-right text-green-600 text-xs">
+                          {formatCurrency(p.roth_ending_balance)}
+                        </td>
+                        <td className="px-2 py-2 text-right text-purple-600 text-xs">
+                          {formatCurrency(p.taxable_ending_balance)}
+                        </td>
+                        <td className="px-2 py-2 text-right text-gray-600 text-xs">
+                          {formatCurrency(p.cash_ending_balance)}
                         </td>
                       </tr>
                     ))}
@@ -1198,6 +1246,32 @@ export function ScenarioModelingPage() {
                       { key: 'international_small_cap_value', label: 'Intl Small Cap (VSS)', return: '8.0%' },
                       { key: 'developed_markets', label: 'Developed (VEA)', return: '6.5%' },
                       { key: 'emerging_markets', label: 'Emerging (VWO)', return: '8.0%' },
+                    ].map(({ key, label, return: ret }) => (
+                      <div key={key} className="flex items-center gap-2">
+                        <label className="w-40 text-xs text-gray-700" title={`Expected: ${ret}`}>{label}</label>
+                        <input
+                          type="number"
+                          value={formData.asset_allocation[key as keyof AssetAllocation]}
+                          onChange={(e) =>
+                            handleAllocationChange(key as keyof AssetAllocation, e.target.value)
+                          }
+                          className="w-16 px-2 py-1 border border-gray-300 rounded-md text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          min="0"
+                          max="100"
+                          step="0.01"
+                        />
+                        <span className="text-xs text-gray-400">%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Real Estate */}
+                <div className="mb-3">
+                  <h4 className="text-sm font-medium text-gray-600 mb-2">Real Estate</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { key: 'reits', label: 'REITs (VNQ)', return: '9.5%' },
                     ].map(({ key, label, return: ret }) => (
                       <div key={key} className="flex items-center gap-2">
                         <label className="w-40 text-xs text-gray-700" title={`Expected: ${ret}`}>{label}</label>

@@ -5,6 +5,7 @@ export type AssetClass =
   | 'international_small_cap_value'
   | 'developed_markets'
   | 'emerging_markets'
+  | 'reits'
   | 'bonds'
   | 'short_term_treasuries'
   | 'intermediate_term_treasuries'
@@ -68,6 +69,7 @@ export const ASSET_CLASS_LABELS: Record<AssetClass, string> = {
   international_small_cap_value: 'Intl Small Cap Value',
   developed_markets: 'Developed Markets',
   emerging_markets: 'Emerging Markets',
+  reits: 'REITs',
   bonds: 'Bonds',
   short_term_treasuries: 'Short-Term Treasuries',
   intermediate_term_treasuries: 'Intermediate Treasuries',
@@ -83,6 +85,7 @@ export const ASSET_CLASS_COLORS: Record<AssetClass, string> = {
   international_small_cap_value: 'bg-teal-100 text-teal-800',
   developed_markets: 'bg-cyan-100 text-cyan-800',
   emerging_markets: 'bg-orange-100 text-orange-800',
+  reits: 'bg-red-100 text-red-800',
   bonds: 'bg-yellow-100 text-yellow-800',
   short_term_treasuries: 'bg-lime-100 text-lime-800',
   intermediate_term_treasuries: 'bg-amber-100 text-amber-800',

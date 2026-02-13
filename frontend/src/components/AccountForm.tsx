@@ -18,6 +18,7 @@ export function AccountForm({ account, onSubmit, onCancel }: AccountFormProps) {
   const [name, setName] = useState('');
   const [accountType, setAccountType] = useState<AccountType>('pretax');
   const [balance, setBalance] = useState('');
+  const [costBasis, setCostBasis] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -25,10 +26,12 @@ export function AccountForm({ account, onSubmit, onCancel }: AccountFormProps) {
       setName(account.name);
       setAccountType(account.account_type);
       setBalance(account.balance);
+      setCostBasis(account.cost_basis || '');
     } else {
       setName('');
       setAccountType('pretax');
       setBalance('');
+      setCostBasis('');
     }
   }, [account]);
 
@@ -47,10 +50,26 @@ export function AccountForm({ account, onSubmit, onCancel }: AccountFormProps) {
       return;
     }
 
+    // Validate cost basis if provided
+    let costBasisValue: string | null = null;
+    if (costBasis.trim()) {
+      const costBasisNum = parseFloat(costBasis);
+      if (isNaN(costBasisNum) || costBasisNum < 0) {
+        setError('Please enter a valid cost basis');
+        return;
+      }
+      if (costBasisNum > balanceNum) {
+        setError('Cost basis cannot exceed account balance');
+        return;
+      }
+      costBasisValue = costBasis;
+    }
+
     onSubmit({
       name: name.trim(),
       account_type: accountType,
       balance: balance,
+      cost_basis: costBasisValue,
     });
   };
 
@@ -112,13 +131,35 @@ export function AccountForm({ account, onSubmit, onCancel }: AccountFormProps) {
               id="balance"
               value={balance}
               onChange={(e) => setBalance(e.target.value)}
-              className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               placeholder="0.00"
-              min="0"
-              step="0.01"
             />
           </div>
         </div>
+
+        {(accountType === 'taxable' || account?.account_type === 'taxable') && (
+          <div>
+            <label htmlFor="cost_basis" className="block text-sm font-medium text-gray-700 mb-1">
+              Cost Basis <span className="text-gray-500 text-xs">(for taxable accounts only)</span>
+            </label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                $
+              </span>
+              <input
+                type="number"
+                id="cost_basis"
+                value={costBasis}
+                onChange={(e) => setCostBasis(e.target.value)}
+                className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                placeholder="Original purchase price (optional)"
+              />
+            </div>
+            <p className="mt-1 text-xs text-gray-500">
+              Only gains (balance - cost basis) are taxable on withdrawals. Leave blank if unknown.
+            </p>
+          </div>
+        )}
 
         <div className="flex gap-4 pt-4">
           <button

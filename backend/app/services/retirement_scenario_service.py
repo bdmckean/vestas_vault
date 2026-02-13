@@ -158,6 +158,7 @@ class RetirementScenarioService:
         asset_allocation.emerging_markets = Decimal(
             str(by_asset_class_pct.get("emerging_markets", 0))
         )
+        asset_allocation.reits = Decimal(str(by_asset_class_pct.get("reits", 0)))
         asset_allocation.bonds = Decimal(str(by_asset_class_pct.get("bonds", 0)))
         asset_allocation.short_term_treasuries = Decimal(
             str(by_asset_class_pct.get("short_term_treasuries", 0))
@@ -180,6 +181,7 @@ class RetirementScenarioService:
                 asset_allocation.international_small_cap_value,
                 asset_allocation.developed_markets,
                 asset_allocation.emerging_markets,
+                asset_allocation.reits,
                 asset_allocation.bonds,
                 asset_allocation.short_term_treasuries,
                 asset_allocation.intermediate_term_treasuries,
@@ -198,6 +200,7 @@ class RetirementScenarioService:
             asset_allocation.international_small_cap_value *= factor
             asset_allocation.developed_markets *= factor
             asset_allocation.emerging_markets *= factor
+            asset_allocation.reits *= factor
             asset_allocation.bonds *= factor
             asset_allocation.short_term_treasuries *= factor
             asset_allocation.intermediate_term_treasuries *= factor
@@ -310,9 +313,39 @@ class RetirementScenarioService:
         else:
             raise ValueError("Must provide either scenario_id or scenario_data")
 
-        # Get current portfolio value
+        # Get current portfolio value and group by account type
         accounts = self.account_repository.get_all()
         initial_portfolio = sum(Decimal(str(a.balance)) for a in accounts)
+
+        # Initialize account balances by type
+        account_balances = {
+            "pretax": Decimal("0"),
+            "roth": Decimal("0"),
+            "taxable": Decimal("0"),
+            "cash": Decimal("0"),
+        }
+
+        # Initialize cost basis by type (for taxable accounts)
+        account_cost_basis = {
+            "pretax": Decimal("0"),
+            "roth": Decimal("0"),
+            "taxable": Decimal("0"),
+            "cash": Decimal("0"),
+        }
+
+        # Group accounts by type and sum balances and cost basis
+        for account in accounts:
+            account_type = account.account_type.lower()
+            if account_type in account_balances:
+                account_balances[account_type] += Decimal(str(account.balance))
+                # Track cost basis (only relevant for taxable accounts, but track for all)
+                if account.cost_basis is not None:
+                    account_cost_basis[account_type] += Decimal(str(account.cost_basis))
+            else:
+                # Handle unknown account types - default to taxable
+                account_balances["taxable"] += Decimal(str(account.balance))
+                if account.cost_basis is not None:
+                    account_cost_basis["taxable"] += Decimal(str(account.cost_basis))
 
         # Get birth date and SS from database if not provided
         if birth_date is None or ss_fra_amount is None:
@@ -368,7 +401,21 @@ class RetirementScenarioService:
 
         # Generate year-by-year projections
         projections = []
-        portfolio_balance = initial_portfolio
+        # Track balances by account type throughout projection
+        current_account_balances = {
+            "pretax": account_balances["pretax"],
+            "roth": account_balances["roth"],
+            "taxable": account_balances["taxable"],
+            "cash": account_balances["cash"],
+        }
+
+        # Track cost basis by account type (for calculating taxable gains)
+        current_cost_basis = {
+            "pretax": account_cost_basis["pretax"],
+            "roth": account_cost_basis["roth"],
+            "taxable": account_cost_basis["taxable"],
+            "cash": account_cost_basis["cash"],
+        }
         total_ss = Decimal("0")
         total_other = Decimal("0")
         total_spending = Decimal("0")
@@ -380,7 +427,13 @@ class RetirementScenarioService:
 
         for year_num in range(1, scenario_schema.projection_years + 1):
             age = current_age + year_num - 1
-            starting_balance = portfolio_balance
+            # Calculate total starting balance from all account types
+            starting_balance = (
+                current_account_balances["pretax"]
+                + current_account_balances["roth"]
+                + current_account_balances["taxable"]
+                + current_account_balances["cash"]
+            )
 
             # Calculate SS income for this year
             ss_age_years = scenario_schema.ss_start_age_years
@@ -451,9 +504,9 @@ class RetirementScenarioService:
             total_income = ss_income + other_income
             gross_needed = total_year_spending - total_income
 
-            # Calculate taxes on the income
+            # Initial tax estimation (assuming pretax withdrawals, which matches our sequencing strategy)
+            # We'll recalculate after withdrawals to be more accurate
             # Taxable income = SS (85% taxable at high income) + pretax withdrawals - deductions
-            # For simplicity, assume 85% of SS is taxable if total income is high
             ss_taxable_pct = (
                 Decimal("0.85")
                 if (ss_income + gross_needed) > Decimal("44000")
@@ -461,36 +514,335 @@ class RetirementScenarioService:
             )
             taxable_ss = ss_income * ss_taxable_pct
 
-            # Assume withdrawals from pretax accounts are fully taxable
-            taxable_withdrawal = max(Decimal("0"), gross_needed)
-            gross_taxable_income = taxable_ss + taxable_withdrawal + other_income
-            taxable_income = max(Decimal("0"), gross_taxable_income - total_deductions)
+            # Estimate taxes assuming pretax withdrawals (matches withdrawal sequencing)
+            estimated_taxable_withdrawal = max(Decimal("0"), gross_needed)
+            gross_taxable_income = taxable_ss + estimated_taxable_withdrawal + other_income
+            estimated_taxable_income = max(Decimal("0"), gross_taxable_income - total_deductions)
 
-            # Calculate federal tax
-            federal_tax = self._calculate_federal_tax(taxable_income, filing_status)
+            # Calculate estimated federal tax
+            estimated_federal_tax = self._calculate_federal_tax(
+                estimated_taxable_income, filing_status
+            )
 
-            # Calculate state tax (Colorado flat 4.4%)
-            state_tax = taxable_income * Decimal("0.044")
+            # Calculate estimated state tax (Colorado flat 4.4%)
+            estimated_state_tax = estimated_taxable_income * Decimal("0.044")
 
-            total_tax = federal_tax + state_tax
+            estimated_total_tax = estimated_federal_tax + estimated_state_tax
 
             # Required withdrawal must cover spending + taxes
-            required_withdrawal = max(Decimal("0"), gross_needed + total_tax)
+            required_withdrawal = max(Decimal("0"), gross_needed + estimated_total_tax)
 
-            # Calculate investment return (applied to average balance during year)
-            avg_balance = starting_balance - (required_withdrawal / Decimal("2"))
-            investment_return = avg_balance * (annual_return / Decimal("100"))
+            # Check if we have any money available before attempting withdrawals
+            total_available = (
+                current_account_balances["pretax"]
+                + current_account_balances["taxable"]
+                + current_account_balances["cash"]
+                + current_account_balances["roth"]
+            )
 
-            # Calculate ending balance
-            ending_balance = starting_balance - required_withdrawal + investment_return
+            # If no money available, skip withdrawals
+            if total_available <= 0:
+                required_withdrawal = Decimal("0")
+                pretax_withdrawal = Decimal("0")
+                taxable_account_withdrawal = Decimal("0")
+                cash_withdrawal = Decimal("0")
+                roth_withdrawal = Decimal("0")
+                remaining_withdrawal = Decimal("0")
+            else:
+                # Withdrawal sequencing: pretax first, then taxable, then cash, preserve Roth
+                # Sequence: 1. Pretax, 2. Taxable, 3. Cash, 4. Roth (only if others depleted)
+                pretax_withdrawal = Decimal("0")
+                taxable_account_withdrawal = Decimal("0")
+                cash_withdrawal = Decimal("0")
+                roth_withdrawal = Decimal("0")
+
+                remaining_withdrawal = required_withdrawal
+
+                # 1. Withdraw from pretax first (100% of withdrawal until depleted)
+                if remaining_withdrawal > 0 and current_account_balances["pretax"] > 0:
+                    pretax_withdrawal = min(
+                        remaining_withdrawal, current_account_balances["pretax"]
+                    )
+                    remaining_withdrawal -= pretax_withdrawal
+
+                # 2. If pretax depleted, withdraw from taxable
+                if remaining_withdrawal > 0 and current_account_balances["taxable"] > 0:
+                    taxable_account_withdrawal = min(
+                        remaining_withdrawal, current_account_balances["taxable"]
+                    )
+                    remaining_withdrawal -= taxable_account_withdrawal
+
+                # 3. If taxable also depleted, withdraw from cash
+                if remaining_withdrawal > 0 and current_account_balances["cash"] > 0:
+                    cash_withdrawal = min(remaining_withdrawal, current_account_balances["cash"])
+                    remaining_withdrawal -= cash_withdrawal
+
+                # 4. Only use Roth if pretax + taxable + cash are all depleted
+                if remaining_withdrawal > 0 and current_account_balances["roth"] > 0:
+                    roth_withdrawal = min(remaining_withdrawal, current_account_balances["roth"])
+                    remaining_withdrawal -= roth_withdrawal
+
+                # Calculate actual withdrawal amount (may be less than required if accounts depleted)
+                actual_withdrawal = (
+                    pretax_withdrawal
+                    + taxable_account_withdrawal
+                    + cash_withdrawal
+                    + roth_withdrawal
+                )
+
+                # If we couldn't withdraw the full amount needed, adjust required_withdrawal
+                # This prevents showing withdrawals when accounts are depleted
+                if actual_withdrawal < required_withdrawal:
+                    # Can't withdraw more than available - set to actual amount
+                    required_withdrawal = actual_withdrawal
+                    # If no money available, set to 0
+                    if actual_withdrawal == 0:
+                        required_withdrawal = Decimal("0")
+
+            # Recalculate taxes based on actual withdrawals (only if we actually withdrew)
+            # If no withdrawals, taxes should be based on SS and other income only
+            if required_withdrawal > 0:
+                # Pretax withdrawals: 100% taxable
+                # Taxable account withdrawals: gains only (calculate from cost basis)
+                # Roth withdrawals: 0% taxable
+                # Cash withdrawals: 0% taxable (already taxed)
+
+                # Calculate taxable gains from taxable account withdrawals
+                taxable_gains = Decimal("0")
+                if taxable_account_withdrawal > 0 and current_account_balances["taxable"] > 0:
+                    # Calculate cost basis ratio for taxable accounts
+                    cost_basis_ratio = (
+                        current_cost_basis["taxable"] / current_account_balances["taxable"]
+                        if current_account_balances["taxable"] > 0
+                        else Decimal("0")
+                    )
+                    # Ensure ratio doesn't exceed 1.0 (can't have more cost basis than balance)
+                    cost_basis_ratio = min(cost_basis_ratio, Decimal("1.0"))
+                    # Taxable gain = withdrawal * (1 - cost_basis_ratio)
+                    # Only the gain portion is taxable, not the principal
+                    taxable_gains = taxable_account_withdrawal * (Decimal("1") - cost_basis_ratio)
+
+                # Total taxable withdrawal amount
+                taxable_withdrawal_amount = pretax_withdrawal + taxable_gains
+
+                # Recalculate taxable income with actual withdrawals
+                actual_gross_taxable_income = taxable_ss + taxable_withdrawal_amount + other_income
+                actual_taxable_income = max(
+                    Decimal("0"), actual_gross_taxable_income - total_deductions
+                )
+
+                # Recalculate taxes
+                federal_tax = self._calculate_federal_tax(actual_taxable_income, filing_status)
+                state_tax = actual_taxable_income * Decimal("0.044")
+                total_tax = federal_tax + state_tax
+
+                # Optimization: If Roth was used, recalculate optimal required_withdrawal
+                # This prevents showing over-withdrawal when Roth (tax-free) is used
+                # The issue: required_withdrawal was calculated assuming all pretax (taxable)
+                # But if Roth is used, we don't need extra tax on Roth portion
+                if roth_withdrawal > 0:
+                    # Calculate optimal withdrawal amount:
+                    # We need: gross_needed (spending - other income)
+                    # Tax is only on pretax/taxable/cash withdrawals, not on Roth
+                    # So optimal = gross_needed + tax_on_taxable_withdrawals
+                    # Since tax is already calculated on actual taxable withdrawals:
+                    optimal_withdrawal = gross_needed + total_tax
+
+                    # Adjust required_withdrawal to reflect optimal amount
+                    # This ensures display shows correct "required" amount
+                    if actual_withdrawal >= optimal_withdrawal:
+                        # We withdrew at least the optimal amount
+                        required_withdrawal = optimal_withdrawal
+                    else:
+                        # We couldn't withdraw optimal amount (accounts depleted)
+                        required_withdrawal = actual_withdrawal
+            else:
+                # No withdrawals - taxes based on SS and other income only
+                actual_gross_taxable_income = taxable_ss + other_income
+                actual_taxable_income = max(
+                    Decimal("0"), actual_gross_taxable_income - total_deductions
+                )
+                federal_tax = self._calculate_federal_tax(actual_taxable_income, filing_status)
+                state_tax = actual_taxable_income * Decimal("0.044")
+                total_tax = federal_tax + state_tax
+
+            # Calculate balances after withdrawals (before returns)
+            pretax_after_withdrawal = current_account_balances["pretax"] - pretax_withdrawal
+            taxable_after_withdrawal = (
+                current_account_balances["taxable"] - taxable_account_withdrawal
+            )
+            cash_after_withdrawal = current_account_balances["cash"] - cash_withdrawal
+            roth_after_withdrawal = current_account_balances["roth"] - roth_withdrawal
+
+            # Update cost basis proportionally when withdrawing from taxable accounts
+            # Cost basis is reduced by the same proportion as the withdrawal
+            if taxable_account_withdrawal > 0 and current_account_balances["taxable"] > 0:
+                withdrawal_ratio = taxable_account_withdrawal / current_account_balances["taxable"]
+                cost_basis_reduction = current_cost_basis["taxable"] * withdrawal_ratio
+                current_cost_basis["taxable"] -= cost_basis_reduction
+                # Ensure cost basis doesn't go negative
+                current_cost_basis["taxable"] = max(Decimal("0"), current_cost_basis["taxable"])
+
+            # Calculate average balance per account type (for return calculation)
+            # Average = (starting + after_withdrawal) / 2
+            pretax_avg = (current_account_balances["pretax"] + pretax_after_withdrawal) / Decimal(
+                "2"
+            )
+            taxable_avg = (
+                current_account_balances["taxable"] + taxable_after_withdrawal
+            ) / Decimal("2")
+            cash_avg = (current_account_balances["cash"] + cash_after_withdrawal) / Decimal("2")
+            roth_avg = (current_account_balances["roth"] + roth_after_withdrawal) / Decimal("2")
+
+            # Calculate investment returns per account type (on remaining balances)
+            pretax_return = pretax_avg * (annual_return / Decimal("100"))
+            taxable_return = taxable_avg * (annual_return / Decimal("100"))
+            cash_return = cash_avg * (annual_return / Decimal("100"))
+            roth_return = roth_avg * (annual_return / Decimal("100"))
+            investment_return = pretax_return + taxable_return + cash_return + roth_return
+
+            # Calculate ending balances per account type (after withdrawals and returns)
+            pretax_ending = pretax_after_withdrawal + pretax_return
+            taxable_ending = taxable_after_withdrawal + taxable_return
+            cash_ending = cash_after_withdrawal + cash_return
+            roth_ending = roth_after_withdrawal + roth_return
+
+            # Ensure no negative balances
+            pretax_ending = max(Decimal("0"), pretax_ending)
+            taxable_ending = max(Decimal("0"), taxable_ending)
+            cash_ending = max(Decimal("0"), cash_ending)
+            roth_ending = max(Decimal("0"), roth_ending)
+
+            # Calculate total ending balance
+            ending_balance = pretax_ending + roth_ending + taxable_ending + cash_ending
 
             # Check for depletion
             is_depleted = ending_balance <= 0
             if is_depleted and years_until_depletion is None:
                 years_until_depletion = year_num
                 ending_balance = Decimal("0")
+                pretax_ending = roth_ending = taxable_ending = cash_ending = Decimal("0")
+                # If depleted, ensure no withdrawals are shown
+                if actual_withdrawal == 0:
+                    required_withdrawal = Decimal("0")
 
             after_tax_income = total_income + required_withdrawal - total_tax
+
+            # Validation: Ensure after_tax_income covers spending
+            # If actual tax was higher than estimated, we may need additional withdrawal
+            shortfall = total_year_spending - after_tax_income
+            if shortfall > Decimal("0.01"):  # Allow small rounding differences
+                # Need to withdraw additional amount to cover shortfall
+                # Account for taxes on additional withdrawal (if from pretax/taxable)
+                # Estimate: if withdrawing from pretax, need ~1.3x to cover tax (rough estimate)
+                # We'll refine this iteratively if needed, but limit to one iteration to avoid loops
+                tax_multiplier = Decimal(
+                    "1.3"
+                )  # Rough estimate for pretax (accounts for ~23% effective tax)
+                additional_needed_gross = shortfall * tax_multiplier
+                remaining_additional = additional_needed_gross
+
+                # Track additional withdrawals for tax recalculation
+                additional_pretax = Decimal("0")
+                additional_taxable = Decimal("0")
+                additional_cash = Decimal("0")
+                additional_roth = Decimal("0")
+
+                # Try to cover shortfall from remaining accounts (same sequence)
+                if remaining_additional > 0 and pretax_ending > 0:
+                    additional_pretax = min(remaining_additional, pretax_ending)
+                    pretax_ending -= additional_pretax
+                    pretax_withdrawal += additional_pretax
+                    remaining_additional -= additional_pretax
+                    required_withdrawal += additional_pretax
+
+                if remaining_additional > 0 and taxable_ending > 0:
+                    additional_taxable = min(remaining_additional, taxable_ending)
+                    taxable_ending -= additional_taxable
+                    taxable_account_withdrawal += additional_taxable
+                    remaining_additional -= additional_taxable
+                    required_withdrawal += additional_taxable
+
+                if remaining_additional > 0 and cash_ending > 0:
+                    additional_cash = min(remaining_additional, cash_ending)
+                    cash_ending -= additional_cash
+                    cash_withdrawal += additional_cash
+                    remaining_additional -= additional_cash
+                    required_withdrawal += additional_cash
+
+                if remaining_additional > 0 and roth_ending > 0:
+                    additional_roth = min(remaining_additional, roth_ending)
+                    roth_ending -= additional_roth
+                    roth_withdrawal += additional_roth
+                    remaining_additional -= additional_roth
+                    required_withdrawal += additional_roth
+
+                # Recalculate taxes with additional withdrawals
+                if additional_pretax > 0 or additional_taxable > 0:
+                    # Calculate taxable gains from taxable account withdrawals (including additional)
+                    updated_taxable_gains = Decimal("0")
+                    total_taxable_withdrawal = taxable_account_withdrawal + additional_taxable
+                    if total_taxable_withdrawal > 0 and taxable_ending > 0:
+                        # Use current cost basis ratio (already updated from initial withdrawal)
+                        cost_basis_ratio = (
+                            current_cost_basis["taxable"] / taxable_ending
+                            if taxable_ending > 0
+                            else Decimal("0")
+                        )
+                        cost_basis_ratio = min(cost_basis_ratio, Decimal("1.0"))
+                        updated_taxable_gains = total_taxable_withdrawal * (
+                            Decimal("1") - cost_basis_ratio
+                        )
+
+                    updated_taxable_withdrawal_amount = pretax_withdrawal + updated_taxable_gains
+
+                    # Update cost basis for additional taxable withdrawal
+                    if additional_taxable > 0 and taxable_ending > 0:
+                        additional_withdrawal_ratio = additional_taxable / taxable_ending
+                        additional_cost_basis_reduction = (
+                            current_cost_basis["taxable"] * additional_withdrawal_ratio
+                        )
+                        current_cost_basis["taxable"] -= additional_cost_basis_reduction
+                        current_cost_basis["taxable"] = max(
+                            Decimal("0"), current_cost_basis["taxable"]
+                        )
+                    updated_gross_taxable_income = (
+                        taxable_ss + updated_taxable_withdrawal_amount + other_income
+                    )
+                    updated_taxable_income = max(
+                        Decimal("0"), updated_gross_taxable_income - total_deductions
+                    )
+                    federal_tax = self._calculate_federal_tax(updated_taxable_income, filing_status)
+                    state_tax = updated_taxable_income * Decimal("0.044")
+                    total_tax = federal_tax + state_tax
+
+                # Recalculate after_tax_income with additional withdrawal and updated taxes
+                after_tax_income = total_income + required_withdrawal - total_tax
+
+                # Recalculate ending balance
+                ending_balance = pretax_ending + roth_ending + taxable_ending + cash_ending
+
+                # Recalculate actual withdrawal after additional withdrawals
+                actual_withdrawal = (
+                    pretax_withdrawal
+                    + taxable_account_withdrawal
+                    + cash_withdrawal
+                    + roth_withdrawal
+                )
+
+                # Ensure required_withdrawal doesn't exceed actual withdrawal
+                if required_withdrawal > actual_withdrawal:
+                    required_withdrawal = actual_withdrawal
+
+                # If still shortfall after using all accounts, mark as depleted
+                final_shortfall = total_year_spending - after_tax_income
+                if final_shortfall > Decimal("0.01") and ending_balance <= 0:
+                    is_depleted = True
+                    if years_until_depletion is None:
+                        years_until_depletion = year_num
+                    # If depleted, ensure no withdrawals shown
+                    if actual_withdrawal == 0:
+                        required_withdrawal = Decimal("0")
 
             projections.append(
                 ScenarioYearProjection(
@@ -499,6 +851,22 @@ class RetirementScenarioService:
                     age=age,
                     starting_balance=starting_balance.quantize(Decimal("0.01")),
                     ending_balance=ending_balance.quantize(Decimal("0.01")),
+                    pretax_starting_balance=current_account_balances["pretax"].quantize(
+                        Decimal("0.01")
+                    ),
+                    roth_starting_balance=current_account_balances["roth"].quantize(
+                        Decimal("0.01")
+                    ),
+                    taxable_starting_balance=current_account_balances["taxable"].quantize(
+                        Decimal("0.01")
+                    ),
+                    cash_starting_balance=current_account_balances["cash"].quantize(
+                        Decimal("0.01")
+                    ),
+                    pretax_ending_balance=pretax_ending.quantize(Decimal("0.01")),
+                    roth_ending_balance=roth_ending.quantize(Decimal("0.01")),
+                    taxable_ending_balance=taxable_ending.quantize(Decimal("0.01")),
+                    cash_ending_balance=cash_ending.quantize(Decimal("0.01")),
                     social_security_income=ss_income.quantize(Decimal("0.01")),
                     other_income=other_income.quantize(Decimal("0.01")),
                     total_income=total_income.quantize(Decimal("0.01")),
@@ -513,7 +881,7 @@ class RetirementScenarioService:
                     portfolio_withdrawal=required_withdrawal.quantize(Decimal("0.01")),
                     investment_return=investment_return.quantize(Decimal("0.01")),
                     return_percent=annual_return.quantize(Decimal("0.01")),
-                    taxable_income=taxable_income.quantize(Decimal("0.01")),
+                    taxable_income=actual_taxable_income.quantize(Decimal("0.01")),
                     federal_tax=federal_tax.quantize(Decimal("0.01")),
                     state_tax=state_tax.quantize(Decimal("0.01")),
                     total_tax=total_tax.quantize(Decimal("0.01")),
@@ -527,16 +895,30 @@ class RetirementScenarioService:
             total_other += other_income
             total_spending += total_year_spending
             total_withdrawals += required_withdrawal
-            portfolio_balance = ending_balance
+
+            # Update account balances for next iteration
+            current_account_balances["pretax"] = pretax_ending
+            current_account_balances["roth"] = roth_ending
+            current_account_balances["taxable"] = taxable_ending
+            current_account_balances["cash"] = cash_ending
+
             calendar_year += 1
 
         ss_start_age_str = f"{scenario_schema.ss_start_age_years} years {scenario_schema.ss_start_age_months} months"
+
+        # Calculate final portfolio from account balances
+        final_portfolio = (
+            current_account_balances["pretax"]
+            + current_account_balances["roth"]
+            + current_account_balances["taxable"]
+            + current_account_balances["cash"]
+        )
 
         return ScenarioProjectionResult(
             scenario_id=scenario_id,
             scenario_name=scenario_schema.name,
             initial_portfolio=initial_portfolio.quantize(Decimal("0.01")),
-            final_portfolio=portfolio_balance.quantize(Decimal("0.01")),
+            final_portfolio=final_portfolio.quantize(Decimal("0.01")),
             years_until_depletion=years_until_depletion,
             total_ss_received=total_ss.quantize(Decimal("0.01")),
             total_other_income=total_other.quantize(Decimal("0.01")),
@@ -604,6 +986,8 @@ class RetirementScenarioService:
                         "international_small_cap_value": Decimal("8.0"),  # VSS
                         "developed_markets": Decimal("6.5"),  # VEA
                         "emerging_markets": Decimal("8.0"),  # VWO
+                        # Real Estate
+                        "reits": Decimal("9.5"),  # VNQ - 10-year forecast
                         # Fixed Income
                         "bonds": Decimal("4.5"),  # BND
                         "short_term_treasuries": Decimal("4.0"),  # VGSH

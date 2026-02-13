@@ -25,6 +25,9 @@ class AssetAllocation(BaseModel):
     developed_markets: Decimal = Field(0, ge=0, le=100, description="Developed Markets (VEA)")
     emerging_markets: Decimal = Field(0, ge=0, le=100, description="Emerging Markets (VWO)")
 
+    # Real Estate
+    reits: Decimal = Field(0, ge=0, le=100, description="REITs (VNQ)")
+
     # Fixed Income
     bonds: Decimal = Field(0, ge=0, le=100, description="Total Bond Market (BND)")
     short_term_treasuries: Decimal = Field(
@@ -48,6 +51,7 @@ class AssetAllocation(BaseModel):
             + self.international_small_cap_value
             + self.developed_markets
             + self.emerging_markets
+            + self.reits
             + self.bonds
             + self.short_term_treasuries
             + self.intermediate_term_treasuries
@@ -158,6 +162,34 @@ class ScenarioYearProjection(BaseModel):
     # Balances
     starting_balance: Decimal = Field(..., description="Portfolio balance at start of year")
     ending_balance: Decimal = Field(..., description="Portfolio balance at end of year")
+
+    # Account type balances (starting)
+    pretax_starting_balance: Decimal = Field(
+        Decimal("0"), description="Pretax account balance at start of year"
+    )
+    roth_starting_balance: Decimal = Field(
+        Decimal("0"), description="Roth account balance at start of year"
+    )
+    taxable_starting_balance: Decimal = Field(
+        Decimal("0"), description="Taxable account balance at start of year"
+    )
+    cash_starting_balance: Decimal = Field(
+        Decimal("0"), description="Cash account balance at start of year"
+    )
+
+    # Account type balances (ending)
+    pretax_ending_balance: Decimal = Field(
+        Decimal("0"), description="Pretax account balance at end of year"
+    )
+    roth_ending_balance: Decimal = Field(
+        Decimal("0"), description="Roth account balance at end of year"
+    )
+    taxable_ending_balance: Decimal = Field(
+        Decimal("0"), description="Taxable account balance at end of year"
+    )
+    cash_ending_balance: Decimal = Field(
+        Decimal("0"), description="Cash account balance at end of year"
+    )
 
     # Income
     social_security_income: Decimal = Field(..., description="SS income for the year")

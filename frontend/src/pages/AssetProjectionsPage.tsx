@@ -125,7 +125,7 @@ export function AssetProjectionsPage() {
           {/* Key Asset Classes Summary Cards */}
           {consolidated && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {['total_us_stock', 'total_foreign_stock', 'us_small_cap_value', 'bonds', 'short_term_treasuries', 'cash'].map((key) => {
+              {['total_us_stock', 'total_foreign_stock', 'us_small_cap_value', 'reits', 'bonds', 'short_term_treasuries', 'cash'].map((key) => {
                 const asset = consolidated.asset_classes[key];
                 if (!asset) return null;
                 return (
@@ -153,6 +153,38 @@ export function AssetProjectionsPage() {
         <div className="space-y-6">
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-2xl font-bold mb-4 text-gray-900">Long-Term Historical Returns</h2>
+            
+            {/* Return Assumption Notice */}
+            <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-blue-800">Return Assumption for Years 10+</h3>
+                  <div className="mt-2 text-sm text-blue-700">
+                    <p className="mb-2">
+                      When using <strong>"Historical Average"</strong> return source, or for projections beyond year 10, the system uses <strong>long-term historical averages</strong> based on your asset allocation:
+                    </p>
+                    <ul className="list-disc list-inside space-y-1 ml-2">
+                      <li><strong>Total US Stock:</strong> 10.0% (30-year historical average)</li>
+                      <li><strong>Total International Stock:</strong> 8.5% (long-term average)</li>
+                      <li><strong>US Small Cap Value:</strong> 13.0% (long-term average)</li>
+                      <li><strong>REITs:</strong> 9.35% (30-year historical average)</li>
+                      <li><strong>Bonds:</strong> 4.5% (long-term average)</li>
+                      <li><strong>Short-Term Treasuries:</strong> 4.0% (long-term average)</li>
+                      <li><strong>Cash:</strong> 3.31% (historical T-bill average)</li>
+                    </ul>
+                    <p className="mt-2">
+                      Your blended return for years 10+ is calculated as a weighted average based on your asset allocation percentages. These historical averages are derived from the data shown in the tables below.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
             <p className="text-gray-600 mb-2">{historical.metadata.description}</p>
             <p className="text-sm text-gray-500 mb-6">Last updated: {historical.metadata.last_updated}</p>
 

@@ -5,6 +5,7 @@ export interface Account {
   name: string;
   account_type: AccountType;
   balance: string;
+  cost_basis: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -13,10 +14,12 @@ export interface AccountCreate {
   name: string;
   account_type: AccountType;
   balance: string;
+  cost_basis?: string | null;
 }
 
 export interface AccountUpdate {
   name?: string;
   account_type?: AccountType;
   balance?: string;
+  cost_basis?: string | null;
 }

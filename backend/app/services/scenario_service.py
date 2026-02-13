@@ -153,6 +153,7 @@ class ScenarioService:
                 "total_us_stock": get_return("total_us_stock", Decimal("7.5")),
                 "total_foreign_stock": get_return("total_foreign_stock", Decimal("7.0")),
                 "us_small_cap_value": get_return("us_small_cap_value", Decimal("8.5")),
+                "reits": get_return("reits", Decimal("9.5")),
                 "bonds": get_return("bonds", Decimal("4.5")),
                 "short_term_treasuries": get_return("short_term_treasuries", Decimal("4.0")),
                 "cash": get_return("cash", Decimal("3.5")),
@@ -164,6 +165,7 @@ class ScenarioService:
                 "total_us_stock": Decimal("10.0"),  # ~10% long-term average
                 "total_foreign_stock": Decimal("8.5"),  # ~8.5% long-term average
                 "us_small_cap_value": Decimal("13.0"),  # ~13% long-term average
+                "reits": Decimal("9.35"),  # 30-year historical average
                 "bonds": Decimal("4.5"),  # ~4.5% long-term average
                 "short_term_treasuries": Decimal("4.0"),  # ~4% long-term average
                 "cash": Decimal("3.31"),  # Historical T-bill average
@@ -181,6 +183,7 @@ class ScenarioService:
             allocation.total_us_stock * return_rates["total_us_stock"] / Decimal("100")
             + allocation.total_foreign_stock * return_rates["total_foreign_stock"] / Decimal("100")
             + allocation.us_small_cap_value * return_rates["us_small_cap_value"] / Decimal("100")
+            + allocation.reits * return_rates.get("reits", Decimal("9.5")) / Decimal("100")
             + allocation.bonds * return_rates["bonds"] / Decimal("100")
             + allocation.short_term_treasuries
             * return_rates["short_term_treasuries"]
@@ -200,6 +203,7 @@ class ScenarioService:
             "total_us_stock": total_balance * allocation.total_us_stock / Decimal("100"),
             "total_foreign_stock": total_balance * allocation.total_foreign_stock / Decimal("100"),
             "us_small_cap_value": total_balance * allocation.us_small_cap_value / Decimal("100"),
+            "reits": total_balance * allocation.reits / Decimal("100"),
             "bonds": total_balance * allocation.bonds / Decimal("100"),
             "short_term_treasuries": total_balance
             * allocation.short_term_treasuries

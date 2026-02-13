@@ -5,6 +5,7 @@ export interface AssetAllocation {
   international_small_cap_value: string; // VSS - Vanguard FTSE All-World ex-US Small Cap
   developed_markets: string;     // VEA - Vanguard FTSE Developed Markets
   emerging_markets: string;      // VWO - Vanguard FTSE Emerging Markets
+  reits: string;                 // VNQ - Vanguard Real Estate ETF
   bonds: string;                 // BND - Vanguard Total Bond Market
   short_term_treasuries: string; // VGSH - Vanguard Short-Term Treasury
   intermediate_term_treasuries: string; // VGIT - Vanguard Intermediate-Term Treasury
@@ -73,6 +74,16 @@ export interface ScenarioYearProjection {
   age: number;
   starting_balance: string;
   ending_balance: string;
+  // Account type balances (starting)
+  pretax_starting_balance: string;
+  roth_starting_balance: string;
+  taxable_starting_balance: string;
+  cash_starting_balance: string;
+  // Account type balances (ending)
+  pretax_ending_balance: string;
+  roth_ending_balance: string;
+  taxable_ending_balance: string;
+  cash_ending_balance: string;
   social_security_income: string;
   other_income: string;
   total_income: string;
@@ -121,6 +132,7 @@ export const DEFAULT_ASSET_ALLOCATION: AssetAllocation = {
   international_small_cap_value: '5',
   developed_markets: '10',
   emerging_markets: '5',
+  reits: '0',
   bonds: '10',
   short_term_treasuries: '5',
   intermediate_term_treasuries: '3',
@@ -137,6 +149,7 @@ export const SCENARIO_ASSET_CLASS_INFO: Record<keyof AssetAllocation, { label: s
   international_small_cap_value: { label: 'Intl Small Cap Value', ticker: 'VSS', expectedReturn: 8.0 },
   developed_markets: { label: 'Developed Markets', ticker: 'VEA', expectedReturn: 6.5 },
   emerging_markets: { label: 'Emerging Markets', ticker: 'VWO', expectedReturn: 8.0 },
+  reits: { label: 'REITs', ticker: 'VNQ', expectedReturn: 9.5 },
   bonds: { label: 'Total Bond Market', ticker: 'BND', expectedReturn: 4.5 },
   short_term_treasuries: { label: 'Short-Term Treasury', ticker: 'VGSH', expectedReturn: 4.0 },
   intermediate_term_treasuries: { label: 'Intermediate Treasury', ticker: 'VGIT', expectedReturn: 4.2 },
