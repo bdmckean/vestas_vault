@@ -1,8 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useTaxConfig, useCreateTaxConfig, useUpdateTaxConfig, useDeleteTaxConfig } from '../hooks/useTaxConfig';
+import {
+  useTaxConfig,
+  useCreateTaxConfig,
+  useUpdateTaxConfig,
+  useDeleteTaxConfig,
+} from '../hooks/useTaxConfig';
 import { useStandardDeductions } from '../hooks/useTaxTables';
 import { taxConfigApi, EstimatedAnnualIncome } from '../services/tax_config_api';
-import type { FilingStatus, SeniorDeductionBreakdown } from '../types/tax_config';
+import type { FilingStatus, SeniorDeductionBreakdown, StateOfResidence } from '../types/tax_config';
 
 const FILING_STATUS_OPTIONS: { value: FilingStatus; label: string }[] = [
   { value: 'single', label: 'Single' },
@@ -12,6 +17,11 @@ const FILING_STATUS_OPTIONS: { value: FilingStatus; label: string }[] = [
   { value: 'qualifying_widow', label: 'Qualifying Widow(er)' },
 ];
 
+const STATE_OPTIONS: { value: StateOfResidence; label: string }[] = [
+  { value: 'CO', label: 'Colorado (SS exempt for 65+)' },
+  { value: 'OTHER', label: 'Other (flat rate on federal taxable)' },
+];
+
 export function TaxPage() {
   const { data: taxConfig, isLoading } = useTaxConfig();
   const createMutation = useCreateTaxConfig();
@@ -19,9 +29,8 @@ export function TaxPage() {
   const deleteMutation = useDeleteTaxConfig();
 
   const [filingStatus, setFilingStatus] = useState<FilingStatus>('single');
+  const [stateOfResidence, setStateOfResidence] = useState<StateOfResidence>('CO');
   const [totalDeductions, setTotalDeductions] = useState('');
-  const [primaryAge, setPrimaryAge] = useState<number | null>(null);
-  const [spouseAge, setSpouseAge] = useState<number | null>(null);
   const [annualIncome, setAnnualIncome] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -58,47 +67,41 @@ export function TaxPage() {
   useEffect(() => {
     if (taxConfig) {
       setFilingStatus(taxConfig.filing_status);
+      setStateOfResidence(
+        taxConfig.state === 'CO' || taxConfig.state === 'OTHER' ? taxConfig.state : 'CO'
+      );
       setTotalDeductions(taxConfig.total_deductions);
-      setPrimaryAge(taxConfig.primary_age);
-      setSpouseAge(taxConfig.spouse_age);
       setAnnualIncome(taxConfig.annual_income || '');
     }
   }, [taxConfig]);
 
-  // Calculate senior deductions when relevant fields change
+  // Calculate senior deductions (ages derived from SS birth dates on backend)
   useEffect(() => {
     const calculateSenior = async () => {
-      if (
-        (primaryAge !== null && primaryAge >= 65) ||
-        (spouseAge !== null && spouseAge >= 65) ||
-        (filingStatus === 'married_filing_jointly' && (primaryAge !== null || spouseAge !== null))
-      ) {
-        setCalculatingSenior(true);
-        try {
-          const breakdown = await taxConfigApi.calculateSeniorDeductions(
-            filingStatus,
-            primaryAge,
-            spouseAge,
-            annualIncome ? parseFloat(annualIncome) : null,
-            taxYear
-          );
-          setSeniorDeductions(breakdown);
-          // Auto-update total deductions to include senior deductions if not manually set
-          if (!taxConfig && breakdown.total_automatic_deduction) {
-            setTotalDeductions(breakdown.total_automatic_deduction);
-          }
-        } catch (err) {
-          console.error('Error calculating senior deductions:', err);
-        } finally {
-          setCalculatingSenior(false);
+      setCalculatingSenior(true);
+      try {
+        const breakdown = await taxConfigApi.calculateSeniorDeductions(
+          filingStatus,
+          null,
+          null,
+          annualIncome ? parseFloat(annualIncome) : null,
+          taxYear
+        );
+        setSeniorDeductions(breakdown);
+        // Auto-update total deductions to include senior deductions if not manually set
+        if (!taxConfig && breakdown.total_automatic_deduction) {
+          setTotalDeductions(breakdown.total_automatic_deduction);
         }
-      } else {
+      } catch (err) {
+        console.error('Error calculating senior deductions:', err);
         setSeniorDeductions(null);
+      } finally {
+        setCalculatingSenior(false);
       }
     };
 
     calculateSenior();
-  }, [filingStatus, primaryAge, spouseAge, annualIncome, taxYear, taxConfig]);
+  }, [filingStatus, annualIncome, taxYear, taxConfig]);
 
   const formatCurrency = (value: string | number) => {
     const num = typeof value === 'string' ? parseFloat(value || '0') : value;
@@ -128,29 +131,37 @@ export function TaxPage() {
     }
 
     try {
+      // Backend requires total_deductions as a valid number; send '0' if empty
+      const deductionsToSend = (totalDeductions ?? '').trim() === '' ? '0' : totalDeductions;
+      const incomeToSend = (annualIncome ?? '').trim() === '' ? null : annualIncome;
+
       if (taxConfig) {
         // Update existing
         await updateMutation.mutateAsync({
           filing_status: filingStatus,
-          total_deductions: totalDeductions,
-          primary_age: primaryAge,
-          spouse_age: spouseAge,
-          annual_income: annualIncome || null,
+          total_deductions: deductionsToSend,
+          annual_income: incomeToSend,
+          state: stateOfResidence,
         });
         setSuccess('Tax configuration updated successfully');
       } else {
         // Create new
         await createMutation.mutateAsync({
           filing_status: filingStatus,
-          total_deductions: totalDeductions,
-          primary_age: primaryAge,
-          spouse_age: spouseAge,
-          annual_income: annualIncome || null,
+          total_deductions: deductionsToSend,
+          annual_income: incomeToSend,
+          state: stateOfResidence,
         });
         setSuccess('Tax configuration created successfully');
       }
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Error saving tax configuration');
+      const detail = err.response?.data?.detail;
+      const message = Array.isArray(detail)
+        ? detail.map((d: any) => d.msg || d.loc?.join('.')).join('; ')
+        : typeof detail === 'string'
+          ? detail
+          : 'Error saving tax configuration';
+      setError(message);
     }
   };
 
@@ -164,10 +175,9 @@ export function TaxPage() {
       await deleteMutation.mutateAsync();
       setFilingStatus('single');
       setTotalDeductions('');
-      setPrimaryAge(null);
-      setSpouseAge(null);
       setAnnualIncome('');
       setSeniorDeductions(null);
+      setStateOfResidence('CO');
       setSuccess('Tax configuration deleted successfully');
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Error deleting tax configuration');
@@ -197,13 +207,13 @@ export function TaxPage() {
 
   const standardDeduction = getStandardDeduction();
   const deductionsValue = parseFloat(totalDeductions || '0');
-  const showSpouseAge = filingStatus === 'married_filing_jointly' || filingStatus === 'qualifying_widow';
 
   return (
     <div className="max-w-4xl mx-auto p-6">
       <h1 className="text-4xl font-bold text-gray-900 mb-8">Tax Configuration</h1>
       <p className="text-gray-600 mb-6">
-        Configure your tax filing status and deductions. This will be used for retirement planning tax calculations.
+        Configure your tax filing status and deductions. This will be used for retirement planning
+        tax calculations.
       </p>
 
       {error && (
@@ -228,7 +238,7 @@ export function TaxPage() {
             <select
               id="tax_year"
               value={taxYear}
-              onChange={(e) => setTaxYear(parseInt(e.target.value))}
+              onChange={e => setTaxYear(parseInt(e.target.value))}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value={2026}>2026</option>
@@ -248,61 +258,40 @@ export function TaxPage() {
             <select
               id="filing_status"
               value={filingStatus}
-              onChange={(e) => setFilingStatus(e.target.value as FilingStatus)}
+              onChange={e => setFilingStatus(e.target.value as FilingStatus)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             >
-              {FILING_STATUS_OPTIONS.map((option) => (
+              {FILING_STATUS_OPTIONS.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-sm text-gray-500">Your federal tax filing status</p>
+          </div>
+
+          {/* State of residence (for state income tax) */}
+          <div>
+            <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-2">
+              State of residence
+            </label>
+            <select
+              id="state"
+              value={stateOfResidence}
+              onChange={e => setStateOfResidence(e.target.value as StateOfResidence)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {STATE_OPTIONS.map(option => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
               ))}
             </select>
             <p className="mt-1 text-sm text-gray-500">
-              Your federal tax filing status
+              Used for state income tax in projections. Colorado: Social Security is not taxed for
+              residents 65+.
             </p>
-          </div>
-
-          {/* Age Fields */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="primary_age" className="block text-sm font-medium text-gray-700 mb-2">
-                Primary Filer Age
-              </label>
-              <input
-                type="number"
-                id="primary_age"
-                value={primaryAge || ''}
-                onChange={(e) => setPrimaryAge(e.target.value ? parseInt(e.target.value) : null)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter age"
-                min="0"
-                max="120"
-              />
-              <p className="mt-1 text-sm text-gray-500">
-                Age of primary filer (for senior deductions)
-              </p>
-            </div>
-            {showSpouseAge && (
-              <div>
-                <label htmlFor="spouse_age" className="block text-sm font-medium text-gray-700 mb-2">
-                  Spouse Age
-                </label>
-                <input
-                  type="number"
-                  id="spouse_age"
-                  value={spouseAge || ''}
-                  onChange={(e) => setSpouseAge(e.target.value ? parseInt(e.target.value) : null)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter age"
-                  min="0"
-                  max="120"
-                />
-                <p className="mt-1 text-sm text-gray-500">
-                  Age of spouse (for senior deductions)
-                </p>
-              </div>
-            )}
           </div>
 
           {/* Estimated Annual Income */}
@@ -315,20 +304,27 @@ export function TaxPage() {
                 {parseFloat(estimatedIncome.social_security.annual_amount) > 0 && (
                   <div className="flex justify-between">
                     <span className="text-gray-600">Social Security (at FRA):</span>
-                    <span className="font-medium">{formatCurrency(estimatedIncome.social_security.annual_amount)}</span>
+                    <span className="font-medium">
+                      {formatCurrency(estimatedIncome.social_security.annual_amount)}
+                    </span>
                   </div>
                 )}
                 {estimatedIncome.other_income.sources.map((source, idx) => (
                   <div key={idx} className="flex justify-between">
                     <span className="text-gray-600">
                       {source.name} ({source.income_type})
-                      {!source.is_taxable && <span className="text-green-600 ml-1">(tax-free)</span>}:
+                      {!source.is_taxable && (
+                        <span className="text-green-600 ml-1">(tax-free)</span>
+                      )}
+                      :
                     </span>
                     <span className="font-medium">{formatCurrency(source.annual_amount)}</span>
                   </div>
                 ))}
                 <div className="flex justify-between pt-2 border-t border-green-200">
-                  <span className="text-lg font-semibold text-gray-900">Total Estimated Income:</span>
+                  <span className="text-lg font-semibold text-gray-900">
+                    Total Estimated Income:
+                  </span>
                   <span className="text-lg font-bold text-green-600">
                     {formatCurrency(estimatedIncome.total.annual_amount)}
                   </span>
@@ -355,16 +351,18 @@ export function TaxPage() {
             </label>
             <div className="flex gap-2">
               <div className="relative flex-1">
-                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                  $
+                </span>
                 <input
                   type="number"
                   id="annual_income"
                   value={annualIncome}
-                  onChange={(e) => setAnnualIncome(e.target.value)}
+                  onChange={e => setAnnualIncome(e.target.value)}
                   className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="0.00"
                   min="0"
-                  step="1000"
+                  step="0.01"
                 />
               </div>
               {estimatedIncome && parseFloat(estimatedIncome.total.annual_amount) > 0 && (
@@ -378,8 +376,8 @@ export function TaxPage() {
               )}
             </div>
             <p className="mt-1 text-sm text-gray-500">
-              Used to determine eligibility for $6,000 bonus senior deduction (if under $150k). 
-              {!estimatedIncome || parseFloat(estimatedIncome.total.annual_amount) === 0 
+              Used to determine eligibility for $6,000 bonus senior deduction (if under $150k).
+              {!estimatedIncome || parseFloat(estimatedIncome.total.annual_amount) === 0
                 ? ' Configure Social Security and Other Income to auto-calculate.'
                 : ' You can override the calculated value if needed.'}
             </p>
@@ -388,11 +386,15 @@ export function TaxPage() {
           {/* Senior Deductions Breakdown */}
           {seniorDeductions && (
             <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-              <h3 className="text-sm font-medium text-gray-900 mb-3">Senior Deductions Breakdown ({taxYear})</h3>
+              <h3 className="text-sm font-medium text-gray-900 mb-3">
+                Senior Deductions Breakdown ({taxYear})
+              </h3>
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Base Standard Deduction:</span>
-                  <span className="font-medium">{formatCurrency(seniorDeductions.base_standard_deduction)}</span>
+                  <span className="font-medium">
+                    {formatCurrency(seniorDeductions.base_standard_deduction)}
+                  </span>
                 </div>
                 {parseFloat(seniorDeductions.additional_senior_deduction) > 0 && (
                   <div className="flex justify-between">
@@ -411,7 +413,9 @@ export function TaxPage() {
                   </div>
                 )}
                 <div className="flex justify-between pt-2 border-t border-purple-200">
-                  <span className="text-lg font-semibold text-gray-900">Total Automatic Deduction:</span>
+                  <span className="text-lg font-semibold text-gray-900">
+                    Total Automatic Deduction:
+                  </span>
                   <span className="text-lg font-bold text-purple-600">
                     {formatCurrency(seniorDeductions.total_automatic_deduction)}
                   </span>
@@ -422,7 +426,8 @@ export function TaxPage() {
                   onClick={handleUseSeniorDeduction}
                   className="mt-2 w-full px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 text-sm font-medium"
                 >
-                  Use Total Automatic Deduction ({formatCurrency(seniorDeductions.total_automatic_deduction)})
+                  Use Total Automatic Deduction (
+                  {formatCurrency(seniorDeductions.total_automatic_deduction)})
                 </button>
               </div>
             </div>
@@ -430,21 +435,26 @@ export function TaxPage() {
 
           {/* Total Deductions */}
           <div>
-            <label htmlFor="total_deductions" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="total_deductions"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Total Deductions
             </label>
             <div className="flex gap-2">
               <div className="relative flex-1">
-                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                  $
+                </span>
                 <input
                   type="number"
                   id="total_deductions"
                   value={totalDeductions}
-                  onChange={(e) => setTotalDeductions(e.target.value)}
+                  onChange={e => setTotalDeductions(e.target.value)}
                   className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="0.00"
                   min="0"
-                  step="100"
+                  step="0.01"
                   required
                 />
               </div>
@@ -459,11 +469,14 @@ export function TaxPage() {
               )}
             </div>
             <p className="mt-1 text-sm text-gray-500">
-              Total deductions (standard deduction + itemized deductions + senior deductions). Use buttons to set to standard or automatic senior deduction.
+              Total deductions (standard deduction + itemized deductions + senior deductions). Use
+              buttons to set to standard or automatic senior deduction.
             </p>
             {standardDeduction && (
               <p className="mt-1 text-xs text-blue-600">
-                Standard deduction for {FILING_STATUS_OPTIONS.find((o) => o.value === filingStatus)?.label} ({taxYear}): {formatCurrency(standardDeduction)}
+                Standard deduction for{' '}
+                {FILING_STATUS_OPTIONS.find(o => o.value === filingStatus)?.label} ({taxYear}):{' '}
+                {formatCurrency(standardDeduction)}
               </p>
             )}
           </div>
@@ -474,7 +487,9 @@ export function TaxPage() {
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-gray-600">Filing Status:</span>
-                <span className="font-medium">{FILING_STATUS_OPTIONS.find((o) => o.value === filingStatus)?.label}</span>
+                <span className="font-medium">
+                  {FILING_STATUS_OPTIONS.find(o => o.value === filingStatus)?.label}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Total Deductions:</span>
@@ -501,8 +516,8 @@ export function TaxPage() {
               {createMutation.isLoading || updateMutation.isLoading
                 ? 'Saving...'
                 : taxConfig
-                ? 'Update Tax Configuration'
-                : 'Save Tax Configuration'}
+                  ? 'Update Tax Configuration'
+                  : 'Save Tax Configuration'}
             </button>
             {taxConfig && (
               <button
@@ -523,10 +538,18 @@ export function TaxPage() {
         <h3 className="text-sm font-medium text-gray-900 mb-2">About Tax Configuration</h3>
         <ul className="text-sm text-gray-600 space-y-1 list-disc list-inside">
           <li>Filing status determines which tax brackets apply to your income</li>
-          <li>Total deductions include standard deduction, itemized deductions, and senior deductions</li>
-          <li>For 2026: Additional $1,650 per person 65+ and bonus $6,000 per person 65+ if income under $150k</li>
+          <li>
+            Total deductions include standard deduction, itemized deductions, and senior deductions
+          </li>
+          <li>
+            For 2026: Additional $1,650 per person 65+ and bonus $6,000 per person 65+ if income
+            under $150k
+          </li>
           <li>Enter ages to automatically calculate senior deductions</li>
-          <li>You can use the buttons to quickly set deductions to standard or automatic senior amounts</li>
+          <li>
+            You can use the buttons to quickly set deductions to standard or automatic senior
+            amounts
+          </li>
           <li>This configuration will be used in retirement planning tax calculations</li>
         </ul>
       </div>

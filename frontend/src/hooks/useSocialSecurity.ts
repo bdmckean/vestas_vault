@@ -3,17 +3,19 @@ import { socialSecurityApi } from '../services/social_security_api';
 import type {
   SocialSecurity,
   SocialSecurityCreate,
-  SocialSecurityPaymentProjection,
+  SocialSecurityProjectionsResponse,
   SocialSecurityUpdate,
 } from '../types/social_security';
 
 export function useSocialSecurity() {
-  return useQuery<SocialSecurity | null, Error>('social-security', socialSecurityApi.get);
+  return useQuery<SocialSecurity | null, Error>('social-security', socialSecurityApi.get, {
+    retry: false, // fail fast so user sees error instead of stuck "Loading..."
+  });
 }
 
 export function useSocialSecurityProjections() {
   const { data: ss } = useSocialSecurity();
-  return useQuery<SocialSecurityPaymentProjection[], Error>(
+  return useQuery<SocialSecurityProjectionsResponse, Error>(
     'social-security-projections',
     socialSecurityApi.getProjections,
     {
@@ -25,7 +27,7 @@ export function useSocialSecurityProjections() {
 export function useCreateSocialSecurity() {
   const queryClient = useQueryClient();
   return useMutation<SocialSecurity, Error, SocialSecurityCreate>(
-    (data) => socialSecurityApi.create(data),
+    data => socialSecurityApi.create(data),
     {
       onSuccess: () => {
         queryClient.invalidateQueries('social-security');
@@ -38,7 +40,7 @@ export function useCreateSocialSecurity() {
 export function useUpdateSocialSecurity() {
   const queryClient = useQueryClient();
   return useMutation<SocialSecurity, Error, SocialSecurityUpdate>(
-    (data) => socialSecurityApi.update(data),
+    data => socialSecurityApi.update(data),
     {
       onSuccess: () => {
         queryClient.invalidateQueries('social-security');
@@ -50,13 +52,10 @@ export function useUpdateSocialSecurity() {
 
 export function useDeleteSocialSecurity() {
   const queryClient = useQueryClient();
-  return useMutation<void, Error>(
-    () => socialSecurityApi.delete(),
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries('social-security');
-        queryClient.invalidateQueries('social-security-projections');
-      },
-    }
-  );
+  return useMutation<void, Error>(() => socialSecurityApi.delete(), {
+    onSuccess: () => {
+      queryClient.invalidateQueries('social-security');
+      queryClient.invalidateQueries('social-security-projections');
+    },
+  });
 }

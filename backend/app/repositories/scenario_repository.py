@@ -1,5 +1,6 @@
 """Repository for saved scenario data access."""
 
+from decimal import Decimal
 from uuid import UUID
 
 from sqlalchemy.orm import Session
@@ -90,6 +91,8 @@ class ScenarioRepository:
             description=original.description,
             ss_start_age_years=original.ss_start_age_years,
             ss_start_age_months=original.ss_start_age_months,
+            spouse_ss_start_age_years=getattr(original, "spouse_ss_start_age_years", None),
+            spouse_ss_start_age_months=getattr(original, "spouse_ss_start_age_months", None),
             monthly_spending=original.monthly_spending,
             annual_lump_spending=original.annual_lump_spending,
             inflation_adjusted_percent=original.inflation_adjusted_percent,
@@ -100,6 +103,12 @@ class ScenarioRepository:
             return_source=original.return_source,
             custom_return_percent=original.custom_return_percent,
             inflation_rate=original.inflation_rate,
+            use_bucket_strategy=getattr(original, "use_bucket_strategy", False),
+            bucket_strategy_type=getattr(original, "bucket_strategy_type", "A"),
+            bucket_1_years=getattr(original, "bucket_1_years", 3),
+            bucket_2_years=getattr(original, "bucket_2_years", 4),
+            rebalancing_threshold=getattr(original, "rebalancing_threshold", Decimal("5.0")),
+            recovery_threshold_pct=getattr(original, "recovery_threshold_pct", Decimal("100")),
         )
         self.db.add(new_scenario)
         self.db.commit()

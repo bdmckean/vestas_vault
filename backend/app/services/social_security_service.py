@@ -1,6 +1,6 @@
 """Social Security service for business logic and calculations."""
 
-from datetime import date, timedelta
+from datetime import date
 from decimal import Decimal
 
 from sqlalchemy.orm import Session
@@ -10,6 +10,7 @@ from app.schemas.social_security import (
     SocialSecurity,
     SocialSecurityCreate,
     SocialSecurityPaymentProjection,
+    SocialSecurityProjectionsResponse,
     SocialSecurityUpdate,
 )
 from app.utils.fra_calculator import calculate_fra_decimal
@@ -24,11 +25,21 @@ class SocialSecurityService:
         self.db = db
 
     def get_social_security(self) -> SocialSecurity | None:
-        """Get Social Security configuration."""
-        ss = self.repository.get()
-        if not ss:
-            return None
-        return SocialSecurity.model_validate(ss)
+        """Get Social Security configuration. Uses raw SQL fallback if ORM fails (e.g. missing columns)."""
+        try:
+            ss = self.repository.get()
+            if not ss:
+                return None
+            return SocialSecurity.model_validate(ss)
+        except Exception:
+            self.db.rollback()
+            try:
+                row = self.repository.get_via_raw_sql()
+                if not row:
+                    return None
+                return SocialSecurity.model_validate(row)
+            except Exception:
+                raise  # re-raise so API returns 500 with detail
 
     def create_social_security(self, ss_data: SocialSecurityCreate) -> SocialSecurity:
         """Create Social Security configuration."""
@@ -41,11 +52,19 @@ class SocialSecurityService:
             self.db.delete(existing)
             self.db.commit()
 
-        # Create the model with fra_age included
+        # Create the model with fra_age and optional spouse_fra_age
         from app.models.social_security import SocialSecurity as SocialSecurityModel
 
         ss_dict = ss_data.model_dump()
         ss_dict["fra_age"] = fra_age
+        if ss_dict.get("spouse_birth_date"):
+            ss_dict["spouse_fra_age"] = calculate_fra_decimal(ss_dict["spouse_birth_date"])
+            if ss_dict.get("spouse_benefit_source") == "half_of_partner":
+                ss_dict["spouse_fra_monthly_amount"] = None
+        else:
+            ss_dict["spouse_fra_age"] = None
+            ss_dict["spouse_fra_monthly_amount"] = None
+            ss_dict["spouse_benefit_source"] = None
 
         ss = SocialSecurityModel(**ss_dict)
         self.db.add(ss)
@@ -70,6 +89,23 @@ class SocialSecurityService:
         elif "birth_date" not in update_dict and ss.birth_date:
             # Recalculate fra_age from current birth_date to ensure it's correct
             update_dict["fra_age"] = calculate_fra_decimal(ss.birth_date)
+
+        # Spouse FRA from spouse_birth_date; half_of_partner => no spouse amount
+        if "spouse_birth_date" in update_dict:
+            if update_dict["spouse_birth_date"]:
+                update_dict["spouse_fra_age"] = calculate_fra_decimal(
+                    update_dict["spouse_birth_date"]
+                )
+                if update_dict.get("spouse_benefit_source") == "half_of_partner":
+                    update_dict["spouse_fra_monthly_amount"] = None
+            else:
+                update_dict["spouse_fra_age"] = None
+                update_dict["spouse_fra_monthly_amount"] = None
+                update_dict["spouse_benefit_source"] = None
+        elif getattr(ss, "spouse_birth_date", None):
+            update_dict["spouse_fra_age"] = calculate_fra_decimal(ss.spouse_birth_date)
+            if update_dict.get("spouse_benefit_source") == "half_of_partner":
+                update_dict["spouse_fra_monthly_amount"] = None
 
         # Update the model directly
         for field, value in update_dict.items():
@@ -255,3 +291,28 @@ class SocialSecurityService:
                 )
 
         return projections
+
+    def get_primary_and_spouse_projections(
+        self, ss: SocialSecurity
+    ) -> SocialSecurityProjectionsResponse:
+        """
+        Get payment projections for primary and, if configured, spouse (by start age 62–70).
+        Spouse benefit "half_of_partner" uses 50% of primary FRA (today's dollars); COLA
+        applies after each person's start date.
+        """
+        primary = self.get_payment_projections(ss.birth_date, ss.fra_age, ss.fra_monthly_amount)
+        spouse_projections: list[SocialSecurityPaymentProjection] | None = None
+        if ss.spouse_birth_date and ss.spouse_fra_age is not None:
+            if getattr(ss, "spouse_benefit_source", None) == "half_of_partner":
+                spouse_fra_amount = ss.fra_monthly_amount * Decimal("0.5")
+            elif getattr(ss, "spouse_fra_monthly_amount", None) is not None:
+                spouse_fra_amount = ss.spouse_fra_monthly_amount
+            else:
+                spouse_fra_amount = ss.fra_monthly_amount * Decimal("0.5")
+            spouse_projections = self.get_payment_projections(
+                ss.spouse_birth_date, ss.spouse_fra_age, spouse_fra_amount
+            )
+        return SocialSecurityProjectionsResponse(
+            primary_projections=primary,
+            spouse_projections=spouse_projections,
+        )

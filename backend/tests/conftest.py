@@ -1,17 +1,21 @@
 """Pytest configuration and fixtures."""
 
+import os
+
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from fastapi.testclient import TestClient
 
-from app.database import Base, get_db
-from app.main import app
+# Use SQLite for tests so they run without Postgres (app schema uses JSON for SQLite compat).
+os.environ.setdefault("DATABASE_URL", "sqlite:///./test.db")
 
-# Test database (SQLite in-memory for speed)
-SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
+from app.database import Base, get_db  # noqa: E402
+from app.main import app  # noqa: E402
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+SQLALCHEMY_DATABASE_URL = os.environ["DATABASE_URL"]
+connect_args = {"check_same_thread": False} if "sqlite" in SQLALCHEMY_DATABASE_URL else {}
+engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args=connect_args)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 

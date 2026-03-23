@@ -10,10 +10,10 @@ import type {
   PlannedFixedExpenseUpdate,
 } from '../types/planned_fixed_expense';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8005';
+import { API_BASE_URL } from '../config/api';
 
 const apiClient = axios.create({
-  baseURL: `${API_URL}/api/v1`,
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -26,7 +26,9 @@ export const plannedFixedExpensesApi = {
   },
 
   getSummary: async (): Promise<PlannedFixedExpenseSummary> => {
-    const response = await apiClient.get<PlannedFixedExpenseSummary>('/planned-fixed-expenses/summary');
+    const response = await apiClient.get<PlannedFixedExpenseSummary>(
+      '/planned-fixed-expenses/summary'
+    );
     return response.data;
   },
 
@@ -41,7 +43,10 @@ export const plannedFixedExpensesApi = {
   },
 
   update: async (id: string, data: PlannedFixedExpenseUpdate): Promise<PlannedFixedExpense> => {
-    const response = await apiClient.patch<PlannedFixedExpense>(`/planned-fixed-expenses/${id}`, data);
+    const response = await apiClient.patch<PlannedFixedExpense>(
+      `/planned-fixed-expenses/${id}`,
+      data
+    );
     return response.data;
   },
 

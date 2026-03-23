@@ -5,6 +5,9 @@ export type FilingStatus =
   | 'head_of_household'
   | 'qualifying_widow';
 
+/** State of residence for state income tax. CO = Colorado (SS excluded for 65+); OTHER = flat on federal taxable. */
+export type StateOfResidence = 'CO' | 'OTHER';
+
 export interface TaxConfig {
   id: number;
   filing_status: FilingStatus;
@@ -12,6 +15,7 @@ export interface TaxConfig {
   primary_age: number | null;
   spouse_age: number | null;
   annual_income: string | null;
+  state: StateOfResidence | null;
   created_at: string;
   updated_at: string;
 }
@@ -22,6 +26,7 @@ export interface TaxConfigCreate {
   primary_age?: number | null;
   spouse_age?: number | null;
   annual_income?: string | null;
+  state?: StateOfResidence | null;
 }
 
 export interface TaxConfigUpdate {
@@ -30,6 +35,7 @@ export interface TaxConfigUpdate {
   primary_age?: number | null;
   spouse_age?: number | null;
   annual_income?: string | null;
+  state?: StateOfResidence | null;
 }
 
 export interface SeniorDeductionBreakdown {

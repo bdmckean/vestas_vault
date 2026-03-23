@@ -1,10 +1,14 @@
 import axios from 'axios';
-import type { PlannedSpending, PlannedSpendingCreate, PlannedSpendingUpdate } from '../types/planned_spending';
+import type {
+  PlannedSpending,
+  PlannedSpendingCreate,
+  PlannedSpendingUpdate,
+} from '../types/planned_spending';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8005';
+import { API_BASE_URL } from '../config/api';
 
 const apiClient = axios.create({
-  baseURL: `${API_URL}/api/v1`,
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -31,7 +35,9 @@ export const plannedSpendingApi = {
   },
 
   getTotalAnnualSpending: async (): Promise<{ total_annual_spending: string }> => {
-    const response = await apiClient.get<{ total_annual_spending: string }>('/planned-spending/total-annual');
+    const response = await apiClient.get<{ total_annual_spending: string }>(
+      '/planned-spending/total-annual'
+    );
     return response.data;
   },
 };

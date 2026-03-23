@@ -74,6 +74,12 @@ class SavedScenarioBase(BaseModel):
     # Social Security
     ss_start_age_years: int = Field(67, ge=62, le=70, description="Age (years) to start SS")
     ss_start_age_months: int = Field(0, ge=0, le=11, description="Additional months (0-11)")
+    spouse_ss_start_age_years: Optional[int] = Field(
+        None, ge=62, le=70, description="Spouse age (years) to start SS"
+    )
+    spouse_ss_start_age_months: Optional[int] = Field(
+        None, ge=0, le=11, description="Spouse additional months (0-11)"
+    )
 
     # Spending
     monthly_spending: Decimal = Field(Decimal("10000"), ge=0, description="Monthly spending amount")
@@ -112,6 +118,28 @@ class SavedScenarioBase(BaseModel):
         Decimal("2.5"), ge=0, le=15, description="Annual inflation rate"
     )
 
+    # Bucket Strategy
+    use_bucket_strategy: bool = Field(
+        False, description="Enable bucket strategy for dynamic rebalancing"
+    )
+    bucket_strategy_type: Literal["A", "B"] = Field(
+        "A",
+        description="A=3yr cash/4yr balanced (50/50), B=1yr cash/5yr bonds only",
+    )
+    bucket_1_years: int = Field(3, ge=1, le=10, description="Years of spending in Bucket 1 (Cash)")
+    bucket_2_years: int = Field(
+        4, ge=1, le=10, description="Years of spending in Bucket 2 (Balanced or Bonds)"
+    )
+    rebalancing_threshold: Decimal = Field(
+        Decimal("5.0"), ge=0, le=20, description="% drift threshold before rebalancing"
+    )
+    recovery_threshold_pct: Decimal = Field(
+        Decimal("100"),
+        ge=50,
+        le=100,
+        description="Recovery = bucket 3 at or above this % of previous high (100 = return to previous high)",
+    )
+
 
 class SavedScenarioCreate(SavedScenarioBase):
     """Schema for creating a saved scenario."""
@@ -126,6 +154,8 @@ class SavedScenarioUpdate(BaseModel):
     description: Optional[str] = None
     ss_start_age_years: Optional[int] = Field(None, ge=62, le=70)
     ss_start_age_months: Optional[int] = Field(None, ge=0, le=11)
+    spouse_ss_start_age_years: Optional[int] = Field(None, ge=62, le=70)
+    spouse_ss_start_age_months: Optional[int] = Field(None, ge=0, le=11)
     monthly_spending: Optional[Decimal] = Field(None, ge=0)
     annual_lump_spending: Optional[Decimal] = Field(None, ge=0)
     inflation_adjusted_percent: Optional[Decimal] = Field(None, ge=0, le=100)
@@ -136,6 +166,12 @@ class SavedScenarioUpdate(BaseModel):
     return_source: Optional[Literal["10_year_projections", "historical_average", "custom"]] = None
     custom_return_percent: Optional[Decimal] = Field(None, ge=-20, le=30)
     inflation_rate: Optional[Decimal] = Field(None, ge=0, le=15)
+    use_bucket_strategy: Optional[bool] = None
+    bucket_strategy_type: Optional[Literal["A", "B"]] = None
+    bucket_1_years: Optional[int] = Field(None, ge=1, le=10)
+    bucket_2_years: Optional[int] = Field(None, ge=1, le=10)
+    rebalancing_threshold: Optional[Decimal] = Field(None, ge=0, le=20)
+    recovery_threshold_pct: Optional[Decimal] = Field(None, ge=50, le=100)
 
 
 class SavedScenario(SavedScenarioBase):
@@ -192,7 +228,13 @@ class ScenarioYearProjection(BaseModel):
     )
 
     # Income
-    social_security_income: Decimal = Field(..., description="SS income for the year")
+    social_security_income: Decimal = Field(..., description="Total SS income for the year")
+    primary_ss_income: Decimal = Field(
+        Decimal("0"), description="Primary earner SS income for the year"
+    )
+    spouse_ss_income: Decimal = Field(
+        Decimal("0"), description="Spouse SS income for the year (with spousal benefit)"
+    )
     other_income: Decimal = Field(..., description="Other income sources")
     total_income: Decimal = Field(..., description="Total income")
 
@@ -210,6 +252,23 @@ class ScenarioYearProjection(BaseModel):
 
     # Portfolio activity
     portfolio_withdrawal: Decimal = Field(..., description="Amount withdrawn from portfolio")
+    # Withdrawals by source (account type segregation)
+    pretax_withdrawal: Decimal = Field(
+        Decimal("0"), description="Amount withdrawn from pretax accounts this year"
+    )
+    taxable_withdrawal: Decimal = Field(
+        Decimal("0"), description="Amount withdrawn from taxable accounts this year"
+    )
+    cash_withdrawal: Decimal = Field(
+        Decimal("0"), description="Amount withdrawn from cash accounts this year"
+    )
+    roth_withdrawal: Decimal = Field(
+        Decimal("0"), description="Amount withdrawn from Roth accounts this year"
+    )
+    withdrawal_rate_percent: Decimal = Field(
+        Decimal("0"),
+        description="Withdrawal as % of starting portfolio (portfolio_withdrawal / starting_balance * 100)",
+    )
     investment_return: Decimal = Field(..., description="Investment gains/losses")
     return_percent: Decimal = Field(..., description="Return percentage for year")
 
@@ -233,6 +292,15 @@ class ScenarioProjectionResult(BaseModel):
     # Summary
     initial_portfolio: Decimal
     final_portfolio: Decimal
+    # Account type segregation: initial and final balances by type
+    initial_pretax: Decimal = Field(Decimal("0"), description="Initial pretax balance")
+    initial_roth: Decimal = Field(Decimal("0"), description="Initial Roth balance")
+    initial_taxable: Decimal = Field(Decimal("0"), description="Initial taxable balance")
+    initial_cash: Decimal = Field(Decimal("0"), description="Initial cash balance")
+    final_pretax: Decimal = Field(Decimal("0"), description="Final pretax balance")
+    final_roth: Decimal = Field(Decimal("0"), description="Final Roth balance")
+    final_taxable: Decimal = Field(Decimal("0"), description="Final taxable balance")
+    final_cash: Decimal = Field(Decimal("0"), description="Final cash balance")
     years_until_depletion: Optional[int] = Field(None, description="Years until portfolio runs out")
     total_ss_received: Decimal
     total_other_income: Decimal

@@ -42,11 +42,12 @@ export function ScenarioModelingPage() {
   const duplicateMutation = useDuplicateSavedScenario();
   const compareMutation = useCompareScenarios();
   const createDefaultMutation = useCreateOrUpdateDefaultScenario();
-  
+
   // Helper to calculate total monthly spending (base + fixed expenses) for a scenario
   const calculateTotalMonthlySpending = (scenario: SavedScenario): number => {
     const baseMonthly = parseFloat(scenario.monthly_spending || '0');
-    const scenarioFixedExpenses = allFixedExpenses?.filter(fe => fe.scenario_id === scenario.id) || [];
+    const scenarioFixedExpenses =
+      allFixedExpenses?.filter(fe => fe.scenario_id === scenario.id) || [];
     const fixedMonthly = scenarioFixedExpenses.reduce((sum, fe) => {
       // Only count expenses that are active in year 1 (current year) of the projection
       if (fe.start_year <= 1 && (!fe.end_year || fe.end_year >= 1)) {
@@ -56,7 +57,7 @@ export function ScenarioModelingPage() {
     }, 0);
     return baseMonthly + fixedMonthly;
   };
-  
+
   // Helper to get fixed expenses count for a scenario
   const getFixedExpensesCount = (scenarioId: string): number => {
     return allFixedExpenses?.filter(fe => fe.scenario_id === scenarioId).length || 0;
@@ -71,11 +72,16 @@ export function ScenarioModelingPage() {
   const [success, setSuccess] = useState<string | null>(null);
 
   // Fixed expenses
-  const { data: fixedExpenses, isLoading: fixedExpensesLoading, refetch: refetchFixedExpenses, error: fixedExpensesError } = useFixedExpenses(editingScenario?.id);
+  const {
+    data: fixedExpenses,
+    isLoading: fixedExpensesLoading,
+    refetch: refetchFixedExpenses,
+    error: fixedExpensesError,
+  } = useFixedExpenses(editingScenario?.id);
   const createFixedExpenseMutation = useCreateFixedExpense();
   const updateFixedExpenseMutation = useUpdateFixedExpense();
   const deleteFixedExpenseMutation = useDeleteFixedExpense();
-  
+
   // Debug logging
   useEffect(() => {
     console.log('editingScenario changed:', editingScenario?.id, editingScenario?.name);
@@ -83,7 +89,7 @@ export function ScenarioModelingPage() {
     console.log('fixedExpensesLoading:', fixedExpensesLoading);
     console.log('fixedExpensesError:', fixedExpensesError);
   }, [editingScenario?.id, fixedExpenses, fixedExpensesLoading, fixedExpensesError]);
-  
+
   // Refetch fixed expenses when editingScenario changes
   useEffect(() => {
     if (editingScenario?.id) {
@@ -100,6 +106,8 @@ export function ScenarioModelingPage() {
     description: '',
     ss_start_age_years: 67,
     ss_start_age_months: 0,
+    spouse_ss_start_age_years: null,
+    spouse_ss_start_age_months: null,
     monthly_spending: '10000',
     annual_lump_spending: '0',
     inflation_adjusted_percent: '50',
@@ -110,22 +118,30 @@ export function ScenarioModelingPage() {
     return_source: '10_year_projections',
     custom_return_percent: null,
     inflation_rate: '2.5',
+    use_bucket_strategy: false,
+    bucket_strategy_type: 'A',
+    bucket_1_years: 3,
+    bucket_2_years: 4,
+    rebalancing_threshold: '5.0',
+    recovery_threshold_pct: '100',
   });
 
   // Selected scenario projection
-  const { data: projection, isLoading: projectionLoading, error: projectionError } = useScenarioProjection(
-    selectedScenarioId || ''
-  );
+  const {
+    data: projection,
+    isLoading: projectionLoading,
+    error: projectionError,
+  } = useScenarioProjection(selectedScenarioId || '');
 
   // Auto-create/update default scenario when prerequisites are met
   useEffect(() => {
     const hasSSConfig = ssConfig && ssConfig.birth_date && ssConfig.fra_monthly_amount;
     const hasAccounts = accounts && accounts.length > 0;
-    
+
     if (!isLoading && !ssLoading && !accountsLoading && hasSSConfig && hasAccounts) {
       // Check if default scenario exists
       const hasDefaultScenario = scenarios?.some(s => s.name === 'Default Scenario');
-      
+
       // Create or update default scenario if it doesn't exist or if data has changed
       if (!hasDefaultScenario && !createDefaultMutation.isLoading) {
         createDefaultMutation.mutate(undefined, {
@@ -170,6 +186,12 @@ export function ScenarioModelingPage() {
       return_source: '10_year_projections',
       custom_return_percent: null,
       inflation_rate: '2.5',
+      use_bucket_strategy: false,
+      bucket_strategy_type: 'A',
+      bucket_1_years: 3,
+      bucket_2_years: 4,
+      rebalancing_threshold: '5.0',
+      recovery_threshold_pct: '100',
     });
     setEditingScenario(null);
     setShowForm(false);
@@ -183,6 +205,8 @@ export function ScenarioModelingPage() {
       description: scenario.description || '',
       ss_start_age_years: scenario.ss_start_age_years,
       ss_start_age_months: scenario.ss_start_age_months,
+      spouse_ss_start_age_years: scenario.spouse_ss_start_age_years ?? null,
+      spouse_ss_start_age_months: scenario.spouse_ss_start_age_months ?? null,
       monthly_spending: scenario.monthly_spending,
       annual_lump_spending: scenario.annual_lump_spending,
       inflation_adjusted_percent: scenario.inflation_adjusted_percent,
@@ -190,9 +214,18 @@ export function ScenarioModelingPage() {
       spending_reduction_start_year: scenario.spending_reduction_start_year,
       projection_years: scenario.projection_years,
       asset_allocation: scenario.asset_allocation,
-      return_source: scenario.return_source === 'ten_year_projections' ? '10_year_projections' : scenario.return_source,
+      return_source:
+        scenario.return_source === 'ten_year_projections'
+          ? '10_year_projections'
+          : scenario.return_source,
       custom_return_percent: scenario.custom_return_percent,
       inflation_rate: scenario.inflation_rate,
+      use_bucket_strategy: scenario.use_bucket_strategy || false,
+      bucket_strategy_type: scenario.bucket_strategy_type || 'A',
+      bucket_1_years: scenario.bucket_1_years ?? (scenario.bucket_strategy_type === 'B' ? 1 : 3),
+      bucket_2_years: scenario.bucket_2_years ?? (scenario.bucket_strategy_type === 'B' ? 5 : 4),
+      rebalancing_threshold: scenario.rebalancing_threshold || '5.0',
+      recovery_threshold_pct: scenario.recovery_threshold_pct ?? '100',
     });
     setShowForm(true);
     setError(null);
@@ -211,8 +244,20 @@ export function ScenarioModelingPage() {
       return;
     }
 
+    // When bucket strategy is on, use normalized allocation so stock allocations sum to available %
+    let dataToSubmit = formData;
+    if (formData.use_bucket_strategy && accounts?.length) {
+      const normalized = computeBucketAllocation(accounts, formData);
+      if (normalized) {
+        dataToSubmit = {
+          ...formData,
+          asset_allocation: { ...formData.asset_allocation, ...normalized },
+        };
+      }
+    }
+
     // Validate allocation sums to 100
-    const allocTotal = Object.values(formData.asset_allocation).reduce(
+    const allocTotal = Object.values(dataToSubmit.asset_allocation).reduce(
       (sum, val) => sum + parseFloat(val || '0'),
       0
     );
@@ -223,10 +268,10 @@ export function ScenarioModelingPage() {
 
     try {
       if (editingScenario) {
-        await updateMutation.mutateAsync({ id: editingScenario.id, data: formData });
+        await updateMutation.mutateAsync({ id: editingScenario.id, data: dataToSubmit });
         setSuccess('Scenario updated successfully');
       } else {
-        await createMutation.mutateAsync(formData);
+        await createMutation.mutateAsync(dataToSubmit);
         setSuccess('Scenario created successfully');
       }
       resetForm();
@@ -275,16 +320,131 @@ export function ScenarioModelingPage() {
   };
 
   const toggleCompare = (id: string) => {
-    setCompareIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-    );
+    setCompareIds(prev => (prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]));
   };
 
-  const handleAllocationChange = (key: keyof AssetAllocation, value: string) => {
-    setFormData({
-      ...formData,
-      asset_allocation: { ...formData.asset_allocation, [key]: value },
+  const STOCK_ALLOCATION_KEYS: (keyof AssetAllocation)[] = [
+    'total_us_stock',
+    'total_foreign_stock',
+    'us_small_cap_value',
+    'international_small_cap_value',
+    'developed_markets',
+    'emerging_markets',
+    'reits',
+    'other',
+  ];
+
+  // Bucket-derived percentages for display when bucket strategy is on (same formula as computeBucketAllocation).
+  const bucketBreakdown = ((): {
+    cashPct: number;
+    bondPct: number;
+    stockAvailablePct: number;
+  } | null => {
+    if (!formData.use_bucket_strategy || !accounts?.length) return null;
+    const totalPortfolio = accounts.reduce((s, a) => s + parseFloat(String(a.balance || '0')), 0);
+    if (totalPortfolio <= 0) return null;
+    const annualSpending =
+      parseFloat(String(formData.monthly_spending || '0')) * 12 +
+      parseFloat(String(formData.annual_lump_spending || '0'));
+    const b1 = formData.bucket_1_years ?? ((formData.bucket_strategy_type || 'A') === 'B' ? 1 : 3);
+    const b2 = formData.bucket_2_years ?? ((formData.bucket_strategy_type || 'A') === 'B' ? 5 : 4);
+    const isB = (formData.bucket_strategy_type || 'A') === 'B';
+    let cashPct = ((b1 * annualSpending) / totalPortfolio) * 100;
+    let bondPct = ((isB ? b2 * annualSpending : 0.5 * b2 * annualSpending) / totalPortfolio) * 100;
+    if (cashPct + bondPct > 100) {
+      const scale = 100 / (cashPct + bondPct);
+      cashPct *= scale;
+      bondPct *= scale;
+    }
+    const stockAvailablePct = Math.max(0, 100 - cashPct - bondPct);
+    return { cashPct, bondPct, stockAvailablePct };
+  })();
+
+  const stockAllocationSum = STOCK_ALLOCATION_KEYS.reduce(
+    (s, k) => s + parseFloat(String(formData.asset_allocation[k] || '0')),
+    0
+  );
+
+  // Compute cash/bond % from bucket years and spending when bucket strategy is on. Returns null if not applicable.
+  const computeBucketAllocation = (
+    accts: { balance: string }[] | undefined,
+    data: SavedScenarioCreate
+  ): Partial<AssetAllocation> | null => {
+    if (!data.use_bucket_strategy || !accts?.length) return null;
+    const totalPortfolio = accts.reduce((s, a) => s + parseFloat(String(a.balance || '0')), 0);
+    if (totalPortfolio <= 0) return null;
+    const annualSpending =
+      parseFloat(String(data.monthly_spending || '0')) * 12 +
+      parseFloat(String(data.annual_lump_spending || '0'));
+    const b1 = data.bucket_1_years ?? ((data.bucket_strategy_type || 'A') === 'B' ? 1 : 3);
+    const b2 = data.bucket_2_years ?? ((data.bucket_strategy_type || 'A') === 'B' ? 5 : 4);
+    const isB = (data.bucket_strategy_type || 'A') === 'B';
+    const cashDollars = b1 * annualSpending;
+    const bondDollars = isB ? b2 * annualSpending : 0.5 * b2 * annualSpending;
+    let cashPct = (cashDollars / totalPortfolio) * 100;
+    let bondPct = (bondDollars / totalPortfolio) * 100;
+    if (cashPct + bondPct > 100) {
+      const scale = 100 / (cashPct + bondPct);
+      cashPct *= scale;
+      bondPct *= scale;
+    }
+    const stockRemainderPct = Math.max(0, 100 - cashPct - bondPct);
+    const currentStockTotal = STOCK_ALLOCATION_KEYS.reduce(
+      (s, k) => s + parseFloat(String(data.asset_allocation[k] || '0')),
+      0
+    );
+    const factor = currentStockTotal > 0 ? stockRemainderPct / currentStockTotal : 1;
+    const newAlloc: Partial<AssetAllocation> = {
+      cash: String(cashPct.toFixed(2)),
+      bonds: String(bondPct.toFixed(2)),
+      short_term_treasuries: '0',
+      intermediate_term_treasuries: '0',
+      municipal_bonds: '0',
+    };
+    STOCK_ALLOCATION_KEYS.forEach(k => {
+      const v = parseFloat(String(data.asset_allocation[k] || '0'));
+      (newAlloc as AssetAllocation)[k] = String((v * factor).toFixed(2));
     });
+    return newAlloc;
+  };
+
+  // When bucket strategy is on, set cash and bond % from (bucket years × annual spending) / total portfolio
+  useEffect(() => {
+    const newAlloc = computeBucketAllocation(accounts ?? undefined, formData);
+    if (!newAlloc) return;
+    setFormData(prev => ({
+      ...prev,
+      asset_allocation: { ...prev.asset_allocation, ...newAlloc },
+    }));
+  }, [
+    formData.use_bucket_strategy,
+    formData.bucket_1_years,
+    formData.bucket_2_years,
+    formData.bucket_strategy_type,
+    formData.monthly_spending,
+    formData.annual_lump_spending,
+    accounts,
+  ]);
+
+  const handleAllocationChange = (key: keyof AssetAllocation, value: string) => {
+    const next = { ...formData.asset_allocation, [key]: value };
+    if (formData.use_bucket_strategy && STOCK_ALLOCATION_KEYS.includes(key)) {
+      const cash = parseFloat(String(formData.asset_allocation.cash || '0'));
+      const bonds = parseFloat(String(formData.asset_allocation.bonds || '0'));
+      const stockTarget = Math.max(0, 100 - cash - bonds);
+      const stockSum = STOCK_ALLOCATION_KEYS.reduce(
+        (s, k) => s + parseFloat(String(next[k] || '0')),
+        0
+      );
+      if (stockSum > 0) {
+        const factor = stockTarget / stockSum;
+        STOCK_ALLOCATION_KEYS.forEach(k => {
+          const v = parseFloat(String(next[k] || '0'));
+          next[k] = String((v * factor).toFixed(2));
+        });
+      }
+    }
+    setFormData({ ...formData, asset_allocation: next });
   };
 
   if (isLoading || ssLoading || accountsLoading) {
@@ -370,9 +530,19 @@ export function ScenarioModelingPage() {
             </li>
           </ul>
           <p className="text-amber-600 text-sm mt-4">
-            Optional: Configure <Link to="/other-income" className="underline">Other Income</Link>,{' '}
-            <Link to="/spending" className="underline">Planned Spending</Link>, and{' '}
-            <Link to="/taxes" className="underline">Tax Settings</Link> for more accurate projections.
+            Optional: Configure{' '}
+            <Link to="/other-income" className="underline">
+              Other Income
+            </Link>
+            ,{' '}
+            <Link to="/spending" className="underline">
+              Planned Spending
+            </Link>
+            , and{' '}
+            <Link to="/taxes" className="underline">
+              Tax Settings
+            </Link>{' '}
+            for more accurate projections.
           </p>
         </div>
       )}
@@ -412,7 +582,7 @@ export function ScenarioModelingPage() {
                   if (b.name === 'Default Scenario') return 1;
                   return 0;
                 })
-                .map((scenario) => {
+                .map(scenario => {
                   const isDefault = scenario.name === 'Default Scenario';
                   return (
                     <div
@@ -427,7 +597,7 @@ export function ScenarioModelingPage() {
                           <input
                             type="checkbox"
                             checked={compareIds.includes(scenario.id)}
-                            onChange={(e) => {
+                            onChange={e => {
                               e.stopPropagation();
                               toggleCompare(scenario.id);
                             }}
@@ -447,13 +617,15 @@ export function ScenarioModelingPage() {
                               {formatCurrency(calculateTotalMonthlySpending(scenario))}/mo
                               {getFixedExpensesCount(scenario.id) > 0 && (
                                 <span className="text-xs text-gray-400 ml-1">
-                                  (incl. {getFixedExpensesCount(scenario.id)} loan{getFixedExpensesCount(scenario.id) !== 1 ? 's' : ''})
+                                  (incl. {getFixedExpensesCount(scenario.id)} loan
+                                  {getFixedExpensesCount(scenario.id) !== 1 ? 's' : ''})
                                 </span>
                               )}
                             </p>
                             {isDefault && (
                               <p className="text-xs text-gray-400 mt-1">
-                                Based on your current Accounts, SS, Spending, and Portfolio. Click "Refresh" to update with latest loans from Spending page.
+                                Based on your current Accounts, SS, Spending, and Portfolio. Click
+                                "Refresh" to update with latest loans from Spending page.
                               </p>
                             )}
                           </div>
@@ -461,13 +633,18 @@ export function ScenarioModelingPage() {
                         <div className="flex gap-1">
                           {isDefault && (
                             <button
-                              onClick={(e) => {
+                              onClick={e => {
                                 e.stopPropagation();
                                 createDefaultMutation.mutate(undefined, {
-                                  onSuccess: (updatedScenario) => {
-                                    setSuccess('Default scenario updated from current configuration');
+                                  onSuccess: updatedScenario => {
+                                    setSuccess(
+                                      'Default scenario updated from current configuration'
+                                    );
                                     // Always invalidate fixed expenses for the default scenario
-                                    queryClient.invalidateQueries(['fixed-expenses', updatedScenario.id]);
+                                    queryClient.invalidateQueries([
+                                      'fixed-expenses',
+                                      updatedScenario.id,
+                                    ]);
                                     // If we're currently editing this scenario, refetch immediately
                                     if (editingScenario?.id === updatedScenario.id) {
                                       refetchFixedExpenses();
@@ -478,7 +655,10 @@ export function ScenarioModelingPage() {
                                     }
                                   },
                                   onError: (err: any) => {
-                                    setError(err.response?.data?.detail || 'Error updating default scenario');
+                                    setError(
+                                      err.response?.data?.detail ||
+                                        'Error updating default scenario'
+                                    );
                                   },
                                 });
                               }}
@@ -489,7 +669,7 @@ export function ScenarioModelingPage() {
                             </button>
                           )}
                           <button
-                            onClick={(e) => {
+                            onClick={e => {
                               e.stopPropagation();
                               handleEdit(scenario);
                             }}
@@ -498,7 +678,7 @@ export function ScenarioModelingPage() {
                             Edit
                           </button>
                           <button
-                            onClick={(e) => {
+                            onClick={e => {
                               e.stopPropagation();
                               handleDuplicate(scenario.id, scenario.name);
                             }}
@@ -508,7 +688,7 @@ export function ScenarioModelingPage() {
                           </button>
                           {!isDefault && (
                             <button
-                              onClick={(e) => {
+                              onClick={e => {
                                 e.stopPropagation();
                                 handleDelete(scenario.id);
                               }}
@@ -575,7 +755,7 @@ export function ScenarioModelingPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {comparisonResult.scenarios.map((s) => (
+                    {comparisonResult.scenarios.map(s => (
                       <tr key={s.scenario_name} className="hover:bg-gray-50">
                         <td className="px-4 py-2 font-medium">{s.scenario_name}</td>
                         <td className="px-4 py-2 text-right">{s.ss_start_age}</td>
@@ -600,11 +780,11 @@ export function ScenarioModelingPage() {
               <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded">
                 <p className="font-medium">Unable to generate projection</p>
                 <p className="mt-1 text-sm">
-                  {(projectionError as any)?.response?.data?.detail || 
-                   'Please configure Social Security settings (birth date and FRA amount) before generating projections.'}
+                  {(projectionError as any)?.response?.data?.detail ||
+                    'Please configure Social Security settings (birth date and FRA amount) before generating projections.'}
                 </p>
-                <Link 
-                  to="/social-security" 
+                <Link
+                  to="/social-security"
                   className="inline-block mt-3 text-blue-600 hover:text-blue-800 font-medium text-sm"
                 >
                   Go to Social Security Settings →
@@ -633,9 +813,7 @@ export function ScenarioModelingPage() {
                   <div className="text-sm text-gray-600">Final Portfolio</div>
                   <div
                     className={`text-xl font-bold ${
-                      parseFloat(projection.final_portfolio) > 0
-                        ? 'text-green-600'
-                        : 'text-red-600'
+                      parseFloat(projection.final_portfolio) > 0 ? 'text-green-600' : 'text-red-600'
                     }`}
                   >
                     {formatCurrency(projection.final_portfolio)}
@@ -643,9 +821,7 @@ export function ScenarioModelingPage() {
                 </div>
                 <div className="bg-purple-50 p-4 rounded-lg">
                   <div className="text-sm text-gray-600">SS Start Age</div>
-                  <div className="text-xl font-bold text-purple-600">
-                    {projection.ss_start_age}
-                  </div>
+                  <div className="text-xl font-bold text-purple-600">{projection.ss_start_age}</div>
                 </div>
                 <div
                   className={`p-4 rounded-lg ${
@@ -665,11 +841,57 @@ export function ScenarioModelingPage() {
                 </div>
               </div>
 
+              {/* Account type segregation: initial vs final */}
+              {(projection.initial_pretax != null || projection.final_pretax != null) && (
+                <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <div className="text-xs font-medium text-gray-500 mb-1">
+                      Initial by account type
+                    </div>
+                    <div className="flex flex-wrap gap-x-3 gap-y-0.5">
+                      <span className="text-blue-600">
+                        P: {formatCurrency(projection.initial_pretax ?? '0')}
+                      </span>
+                      <span className="text-green-600">
+                        R: {formatCurrency(projection.initial_roth ?? '0')}
+                      </span>
+                      <span className="text-purple-600">
+                        T: {formatCurrency(projection.initial_taxable ?? '0')}
+                      </span>
+                      <span className="text-gray-600">
+                        C: {formatCurrency(projection.initial_cash ?? '0')}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <div className="text-xs font-medium text-gray-500 mb-1">
+                      Final by account type
+                    </div>
+                    <div className="flex flex-wrap gap-x-3 gap-y-0.5">
+                      <span className="text-blue-600">
+                        P: {formatCurrency(projection.final_pretax ?? '0')}
+                      </span>
+                      <span className="text-green-600">
+                        R: {formatCurrency(projection.final_roth ?? '0')}
+                      </span>
+                      <span className="text-purple-600">
+                        T: {formatCurrency(projection.final_taxable ?? '0')}
+                      </span>
+                      <span className="text-gray-600">
+                        C: {formatCurrency(projection.final_cash ?? '0')}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Totals */}
               <div className="grid grid-cols-3 gap-4 mb-6 text-sm">
                 <div>
                   <span className="text-gray-600">Total SS Received:</span>{' '}
-                  <span className="font-medium">{formatCurrency(projection.total_ss_received)}</span>
+                  <span className="font-medium">
+                    {formatCurrency(projection.total_ss_received)}
+                  </span>
                 </div>
                 <div>
                   <span className="text-gray-600">Total Spending:</span>{' '}
@@ -677,7 +899,9 @@ export function ScenarioModelingPage() {
                 </div>
                 <div>
                   <span className="text-gray-600">Total Withdrawals:</span>{' '}
-                  <span className="font-medium">{formatCurrency(projection.total_withdrawals)}</span>
+                  <span className="font-medium">
+                    {formatCurrency(projection.total_withdrawals)}
+                  </span>
                 </div>
               </div>
 
@@ -708,8 +932,26 @@ export function ScenarioModelingPage() {
                       <th className="px-2 py-2 text-right text-xs font-medium text-gray-500">
                         SS Income
                       </th>
+                      <th
+                        className="px-2 py-2 text-right text-xs font-medium text-gray-500"
+                        title="Primary earner SS"
+                      >
+                        Primary SS
+                      </th>
+                      <th
+                        className="px-2 py-2 text-right text-xs font-medium text-gray-500"
+                        title="Spouse SS (with spousal benefit)"
+                      >
+                        Spouse SS
+                      </th>
                       <th className="px-2 py-2 text-right text-xs font-medium text-gray-500">
                         Other Inc
+                      </th>
+                      <th className="px-2 py-2 text-right text-xs font-medium text-gray-500">
+                        Fixed (Loans)
+                      </th>
+                      <th className="px-2 py-2 text-right text-xs font-medium text-gray-500">
+                        Variable
                       </th>
                       <th className="px-2 py-2 text-right text-xs font-medium text-gray-500">
                         Mo. Spend
@@ -728,6 +970,36 @@ export function ScenarioModelingPage() {
                       </th>
                       <th className="px-2 py-2 text-right text-xs font-medium text-gray-500">
                         Withdrawal
+                      </th>
+                      <th
+                        className="px-2 py-2 text-right text-xs font-medium text-gray-500"
+                        title="Withdrawal as % of starting portfolio"
+                      >
+                        Withdrawal %
+                      </th>
+                      <th
+                        className="px-2 py-2 text-right text-xs font-medium text-gray-500 bg-blue-50"
+                        title="Withdrawal from pretax"
+                      >
+                        P W
+                      </th>
+                      <th
+                        className="px-2 py-2 text-right text-xs font-medium text-gray-500 bg-purple-50"
+                        title="Withdrawal from taxable"
+                      >
+                        T W
+                      </th>
+                      <th
+                        className="px-2 py-2 text-right text-xs font-medium text-gray-500 bg-gray-50"
+                        title="Withdrawal from cash"
+                      >
+                        C W
+                      </th>
+                      <th
+                        className="px-2 py-2 text-right text-xs font-medium text-gray-500 bg-green-50"
+                        title="Withdrawal from Roth"
+                      >
+                        R W
                       </th>
                       <th className="px-2 py-2 text-right text-xs font-medium text-gray-500">
                         Return
@@ -750,11 +1022,8 @@ export function ScenarioModelingPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {projection.projections.map((p) => (
-                      <tr
-                        key={p.year}
-                        className={p.is_depleted ? 'bg-red-50' : 'hover:bg-gray-50'}
-                      >
+                    {projection.projections.map(p => (
+                      <tr key={p.year} className={p.is_depleted ? 'bg-red-50' : 'hover:bg-gray-50'}>
                         <td className="px-2 py-2">{p.calendar_year}</td>
                         <td className="px-2 py-2">{p.age}</td>
                         <td className="px-2 py-2 text-right font-medium">
@@ -775,8 +1044,20 @@ export function ScenarioModelingPage() {
                         <td className="px-2 py-2 text-right text-green-600">
                           {formatCurrency(p.social_security_income)}
                         </td>
+                        <td className="px-2 py-2 text-right text-green-600 text-xs">
+                          {formatCurrency(p.primary_ss_income ?? '0')}
+                        </td>
+                        <td className="px-2 py-2 text-right text-green-500 text-xs">
+                          {formatCurrency(p.spouse_ss_income ?? '0')}
+                        </td>
                         <td className="px-2 py-2 text-right text-green-500">
                           {formatCurrency(p.other_income)}
+                        </td>
+                        <td className="px-2 py-2 text-right text-orange-600 text-xs">
+                          {formatCurrency(p.fixed_spending)}
+                        </td>
+                        <td className="px-2 py-2 text-right text-blue-600 text-xs">
+                          {formatCurrency(p.variable_spending)}
                         </td>
                         <td className="px-2 py-2 text-right">
                           {formatCurrency(p.monthly_spending)}
@@ -784,9 +1065,7 @@ export function ScenarioModelingPage() {
                         <td className="px-2 py-2 text-right text-red-600">
                           {formatCurrency(p.total_spending)}
                         </td>
-                        <td className="px-2 py-2 text-right">
-                          {formatCurrency(p.taxable_income)}
-                        </td>
+                        <td className="px-2 py-2 text-right">{formatCurrency(p.taxable_income)}</td>
                         <td className="px-2 py-2 text-right text-orange-600">
                           {formatCurrency(p.federal_tax)}
                         </td>
@@ -795,6 +1074,23 @@ export function ScenarioModelingPage() {
                         </td>
                         <td className="px-2 py-2 text-right">
                           {formatCurrency(p.portfolio_withdrawal)}
+                        </td>
+                        <td className="px-2 py-2 text-right text-gray-600">
+                          {p.withdrawal_rate_percent != null
+                            ? `${parseFloat(p.withdrawal_rate_percent).toFixed(2)}%`
+                            : '—'}
+                        </td>
+                        <td className="px-2 py-2 text-right text-blue-600 text-xs">
+                          {formatCurrency(p.pretax_withdrawal ?? '0')}
+                        </td>
+                        <td className="px-2 py-2 text-right text-purple-600 text-xs">
+                          {formatCurrency(p.taxable_withdrawal ?? '0')}
+                        </td>
+                        <td className="px-2 py-2 text-right text-gray-600 text-xs">
+                          {formatCurrency(p.cash_withdrawal ?? '0')}
+                        </td>
+                        <td className="px-2 py-2 text-right text-green-600 text-xs">
+                          {formatCurrency(p.roth_withdrawal ?? '0')}
                         </td>
                         <td className="px-2 py-2 text-right text-blue-600">
                           {formatCurrency(p.investment_return)}
@@ -849,7 +1145,7 @@ export function ScenarioModelingPage() {
                   <input
                     type="text"
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    onChange={e => setFormData({ ...formData, name: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     placeholder="e.g., SS at 67, $10k/mo"
                     required
@@ -862,7 +1158,7 @@ export function ScenarioModelingPage() {
                   <input
                     type="number"
                     value={formData.projection_years}
-                    onChange={(e) =>
+                    onChange={e =>
                       setFormData({ ...formData, projection_years: parseInt(e.target.value) || 35 })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
@@ -882,7 +1178,7 @@ export function ScenarioModelingPage() {
                     </label>
                     <select
                       value={formData.ss_start_age_years}
-                      onChange={(e) =>
+                      onChange={e =>
                         setFormData({
                           ...formData,
                           ss_start_age_years: parseInt(e.target.value),
@@ -890,7 +1186,7 @@ export function ScenarioModelingPage() {
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     >
-                      {[62, 63, 64, 65, 66, 67, 68, 69, 70].map((age) => (
+                      {[62, 63, 64, 65, 66, 67, 68, 69, 70].map(age => (
                         <option key={age} value={age}>
                           {age}
                         </option>
@@ -903,7 +1199,7 @@ export function ScenarioModelingPage() {
                     </label>
                     <select
                       value={formData.ss_start_age_months}
-                      onChange={(e) =>
+                      onChange={e =>
                         setFormData({
                           ...formData,
                           ss_start_age_months: parseInt(e.target.value),
@@ -911,7 +1207,7 @@ export function ScenarioModelingPage() {
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     >
-                      {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((m) => (
+                      {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(m => (
                         <option key={m} value={m}>
                           {m} months
                         </option>
@@ -919,6 +1215,58 @@ export function ScenarioModelingPage() {
                     </select>
                   </div>
                 </div>
+                {ssConfig?.spouse_birth_date && (
+                  <div className="grid grid-cols-2 gap-4 mt-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Spouse SS Start Age (Years)
+                      </label>
+                      <select
+                        value={formData.spouse_ss_start_age_years ?? ''}
+                        onChange={e =>
+                          setFormData({
+                            ...formData,
+                            spouse_ss_start_age_years: e.target.value
+                              ? parseInt(e.target.value)
+                              : null,
+                          })
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      >
+                        <option value="">Not claiming</option>
+                        {[62, 63, 64, 65, 66, 67, 68, 69, 70].map(age => (
+                          <option key={age} value={age}>
+                            {age}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Spouse Additional Months
+                      </label>
+                      <select
+                        value={formData.spouse_ss_start_age_months ?? ''}
+                        onChange={e =>
+                          setFormData({
+                            ...formData,
+                            spouse_ss_start_age_months: e.target.value
+                              ? parseInt(e.target.value)
+                              : null,
+                          })
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      >
+                        <option value="">—</option>
+                        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(m => (
+                          <option key={m} value={m}>
+                            {m} months
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Spending */}
@@ -936,7 +1284,7 @@ export function ScenarioModelingPage() {
                       <input
                         type="number"
                         value={formData.monthly_spending}
-                        onChange={(e) =>
+                        onChange={e =>
                           setFormData({ ...formData, monthly_spending: e.target.value })
                         }
                         className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -954,7 +1302,7 @@ export function ScenarioModelingPage() {
                       <input
                         type="number"
                         value={formData.annual_lump_spending}
-                        onChange={(e) =>
+                        onChange={e =>
                           setFormData({ ...formData, annual_lump_spending: e.target.value })
                         }
                         className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -969,14 +1317,16 @@ export function ScenarioModelingPage() {
                       Fixed Expenses (not subject to inflation)
                     </h4>
                     <p className="text-xs text-gray-500 mb-3">
-                      Add fixed-rate loans or expenses that end after a specific year. Variable spending = Monthly Spending - Fixed Expenses.
+                      Add fixed-rate loans or expenses that end after a specific year. Variable
+                      spending = Monthly Spending - Fixed Expenses.
                       {editingScenario?.name === 'Default Scenario' && (
                         <span className="block mt-1 text-blue-600">
-                          💡 Tip: Loans from the Spending page are automatically included. Click "Refresh" on the Default Scenario to update them.
+                          💡 Tip: Loans from the Spending page are automatically included. Click
+                          "Refresh" on the Default Scenario to update them.
                         </span>
                       )}
                     </p>
-                    
+
                     {/* Existing fixed expenses */}
                     {fixedExpensesError && (
                       <div className="text-xs text-red-500 mb-3">
@@ -987,7 +1337,7 @@ export function ScenarioModelingPage() {
                       <div className="text-xs text-gray-500 mb-3">Loading fixed expenses...</div>
                     ) : fixedExpenses && fixedExpenses.length > 0 ? (
                       <div className="space-y-2 mb-3">
-                        {fixedExpenses.map((fe) => {
+                        {fixedExpenses.map(fe => {
                           // Try to extract original calendar years from notes, otherwise convert projection years
                           let displayYears = '';
                           if (fe.notes && fe.notes.includes('Original:')) {
@@ -998,23 +1348,34 @@ export function ScenarioModelingPage() {
                             } else {
                               // Fallback to converted projection years
                               const startCalendarYear = projectionYearToCalendarYear(fe.start_year);
-                              const endCalendarYear = fe.end_year ? projectionYearToCalendarYear(fe.end_year) : null;
-                              displayYears = endCalendarYear ? `${startCalendarYear}-${endCalendarYear}` : `${startCalendarYear}+`;
+                              const endCalendarYear = fe.end_year
+                                ? projectionYearToCalendarYear(fe.end_year)
+                                : null;
+                              displayYears = endCalendarYear
+                                ? `${startCalendarYear}-${endCalendarYear}`
+                                : `${startCalendarYear}+`;
                             }
                           } else {
                             // Convert projection years to calendar years
                             const startCalendarYear = projectionYearToCalendarYear(fe.start_year);
-                            const endCalendarYear = fe.end_year ? projectionYearToCalendarYear(fe.end_year) : null;
-                            displayYears = endCalendarYear ? `${startCalendarYear}-${endCalendarYear}` : `${startCalendarYear}+`;
+                            const endCalendarYear = fe.end_year
+                              ? projectionYearToCalendarYear(fe.end_year)
+                              : null;
+                            displayYears = endCalendarYear
+                              ? `${startCalendarYear}-${endCalendarYear}`
+                              : `${startCalendarYear}+`;
                           }
-                          
+
                           return (
-                            <div key={fe.id} className="flex items-center gap-2 text-sm bg-white p-2 rounded border">
+                            <div
+                              key={fe.id}
+                              className="flex items-center gap-2 text-sm bg-white p-2 rounded border"
+                            >
                               <span className="flex-1 font-medium">{fe.name}</span>
-                              <span className="text-gray-600">${parseFloat(fe.monthly_amount).toLocaleString()}/mo</span>
-                              <span className="text-gray-500">
-                                {displayYears}
+                              <span className="text-gray-600">
+                                ${parseFloat(fe.monthly_amount).toLocaleString()}/mo
                               </span>
+                              <span className="text-gray-500">{displayYears}</span>
                               <button
                                 type="button"
                                 onClick={() => deleteFixedExpenseMutation.mutate(fe.id)}
@@ -1031,12 +1392,13 @@ export function ScenarioModelingPage() {
                         No fixed expenses added yet.
                         {editingScenario?.name === 'Default Scenario' && (
                           <span className="block mt-1 text-blue-600">
-                            Click "Refresh" on the Default Scenario to copy loans from Spending page.
+                            Click "Refresh" on the Default Scenario to copy loans from Spending
+                            page.
                           </span>
                         )}
                       </div>
                     )}
-                    
+
                     {/* Add new fixed expense */}
                     <div className="flex gap-2 items-end">
                       <div className="flex-1">
@@ -1044,7 +1406,7 @@ export function ScenarioModelingPage() {
                         <input
                           type="text"
                           value={newExpense.name}
-                          onChange={(e) => setNewExpense({ ...newExpense, name: e.target.value })}
+                          onChange={e => setNewExpense({ ...newExpense, name: e.target.value })}
                           placeholder="e.g., Mortgage"
                           className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
                         />
@@ -1054,7 +1416,9 @@ export function ScenarioModelingPage() {
                         <input
                           type="number"
                           value={newExpense.monthly_amount}
-                          onChange={(e) => setNewExpense({ ...newExpense, monthly_amount: e.target.value })}
+                          onChange={e =>
+                            setNewExpense({ ...newExpense, monthly_amount: e.target.value })
+                          }
                           placeholder="2000"
                           className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
                           min="0"
@@ -1065,7 +1429,7 @@ export function ScenarioModelingPage() {
                         <input
                           type="number"
                           value={newExpense.end_year}
-                          onChange={(e) => setNewExpense({ ...newExpense, end_year: e.target.value })}
+                          onChange={e => setNewExpense({ ...newExpense, end_year: e.target.value })}
                           placeholder="10"
                           className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
                           min="1"
@@ -1099,7 +1463,7 @@ export function ScenarioModelingPage() {
                     <input
                       type="number"
                       value={formData.inflation_adjusted_percent}
-                      onChange={(e) =>
+                      onChange={e =>
                         setFormData({ ...formData, inflation_adjusted_percent: e.target.value })
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -1117,7 +1481,7 @@ export function ScenarioModelingPage() {
                     <input
                       type="number"
                       value={formData.spending_reduction_percent}
-                      onChange={(e) =>
+                      onChange={e =>
                         setFormData({ ...formData, spending_reduction_percent: e.target.value })
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -1130,7 +1494,7 @@ export function ScenarioModelingPage() {
                     <input
                       type="number"
                       value={formData.spending_reduction_start_year || ''}
-                      onChange={(e) =>
+                      onChange={e =>
                         setFormData({
                           ...formData,
                           spending_reduction_start_year: e.target.value
@@ -1156,7 +1520,7 @@ export function ScenarioModelingPage() {
                     </label>
                     <select
                       value={formData.return_source}
-                      onChange={(e) =>
+                      onChange={e =>
                         setFormData({
                           ...formData,
                           return_source: e.target.value as any,
@@ -1164,10 +1528,18 @@ export function ScenarioModelingPage() {
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     >
-                      <option value="10_year_projections">10-Year Projections</option>
-                      <option value="historical_average">Historical Average</option>
-                      <option value="custom">Custom</option>
+                      <option value="10_year_projections">Hybrid (10-Year then Historical)</option>
+                      <option value="historical_average">Historical Average (All Years)</option>
+                      <option value="custom">Custom (All Years)</option>
                     </select>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {formData.return_source === '10_year_projections' &&
+                        'Years 1-10: 10-year institutional projections. Years 11+: Long-term historical averages.'}
+                      {formData.return_source === 'historical_average' &&
+                        'Uses long-term historical averages for all projection years.'}
+                      {formData.return_source === 'custom' &&
+                        'Uses your custom return percentage for all projection years.'}
+                    </p>
                   </div>
                   {formData.return_source === 'custom' && (
                     <div>
@@ -1177,7 +1549,7 @@ export function ScenarioModelingPage() {
                       <input
                         type="number"
                         value={formData.custom_return_percent || ''}
-                        onChange={(e) =>
+                        onChange={e =>
                           setFormData({ ...formData, custom_return_percent: e.target.value })
                         }
                         className="w-full px-3 py-2 border border-gray-300 rounded-md [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -1191,13 +1563,282 @@ export function ScenarioModelingPage() {
                     <input
                       type="number"
                       value={formData.inflation_rate}
-                      onChange={(e) =>
-                        setFormData({ ...formData, inflation_rate: e.target.value })
-                      }
+                      onChange={e => setFormData({ ...formData, inflation_rate: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </div>
                 </div>
+              </div>
+
+              {/* Bucket Strategy */}
+              <div className="border-t pt-4">
+                <div className="mb-3">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={formData.use_bucket_strategy || false}
+                      onChange={e =>
+                        setFormData({ ...formData, use_bucket_strategy: e.target.checked })
+                      }
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <span className="text-sm font-medium text-gray-700">
+                      Enable Bucket Strategy
+                    </span>
+                  </label>
+                  <p className="text-xs text-gray-500 ml-6 mt-1">
+                    Dynamic rebalancing strategy that protects near-term spending needs while
+                    allowing long-term growth assets to recover from market downturns.
+                  </p>
+                </div>
+
+                {formData.use_bucket_strategy && (
+                  <div className="ml-6 space-y-3 bg-blue-50 p-4 rounded-md">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Strategy
+                      </label>
+                      <div className="flex gap-4">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="bucket_strategy_type"
+                            checked={(formData.bucket_strategy_type || 'A') === 'A'}
+                            onChange={() => {
+                              setFormData(prev => {
+                                const next = {
+                                  ...prev,
+                                  bucket_strategy_type: 'A' as const,
+                                  bucket_1_years: 3,
+                                  bucket_2_years: 4,
+                                };
+                                const alloc = computeBucketAllocation(accounts ?? undefined, next);
+                                if (alloc)
+                                  next.asset_allocation = { ...prev.asset_allocation, ...alloc };
+                                return next;
+                              });
+                            }}
+                            className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                          />
+                          <span className="text-sm">
+                            Strategy A: 3yr cash, 4yr balanced (50/50)
+                          </span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="bucket_strategy_type"
+                            checked={(formData.bucket_strategy_type || 'A') === 'B'}
+                            onChange={() => {
+                              setFormData(prev => {
+                                const next = {
+                                  ...prev,
+                                  bucket_strategy_type: 'B' as const,
+                                  bucket_1_years: 1,
+                                  bucket_2_years: 5,
+                                };
+                                const alloc = computeBucketAllocation(accounts ?? undefined, next);
+                                if (alloc)
+                                  next.asset_allocation = { ...prev.asset_allocation, ...alloc };
+                                return next;
+                              });
+                            }}
+                            className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                          />
+                          <span className="text-sm">Strategy B: 1yr cash, 5yr bonds</span>
+                        </label>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Bucket 1 Years (Cash)
+                        </label>
+                        <input
+                          type="number"
+                          value={
+                            formData.bucket_1_years !== undefined &&
+                            formData.bucket_1_years !== null
+                              ? formData.bucket_1_years
+                              : ''
+                          }
+                          onChange={e => {
+                            const raw = e.target.value;
+                            if (raw === '') {
+                              setFormData({
+                                ...formData,
+                                bucket_1_years: undefined as unknown as number,
+                              });
+                              return;
+                            }
+                            const n = parseInt(raw, 10);
+                            if (Number.isNaN(n)) return;
+                            const years = Math.max(1, Math.min(10, n));
+                            setFormData(prev => {
+                              const next = { ...prev, bucket_1_years: years };
+                              const alloc = computeBucketAllocation(accounts ?? undefined, next);
+                              if (alloc)
+                                next.asset_allocation = { ...prev.asset_allocation, ...alloc };
+                              return next;
+                            });
+                          }}
+                          onBlur={e => {
+                            if (e.target.value === '' || formData.bucket_1_years === undefined) {
+                              const defaultVal =
+                                (formData.bucket_strategy_type || 'A') === 'B' ? 1 : 3;
+                              setFormData(prev => {
+                                const next = { ...prev, bucket_1_years: defaultVal };
+                                const alloc = computeBucketAllocation(accounts ?? undefined, next);
+                                if (alloc)
+                                  next.asset_allocation = { ...prev.asset_allocation, ...alloc };
+                                return next;
+                              });
+                            }
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          min="1"
+                          max="10"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Years of spending in cash bucket
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          {(formData.bucket_strategy_type || 'A') === 'B'
+                            ? 'Bucket 2 Years (Bonds)'
+                            : 'Bucket 2 Years (Balanced)'}
+                        </label>
+                        <input
+                          type="number"
+                          value={
+                            formData.bucket_2_years !== undefined &&
+                            formData.bucket_2_years !== null
+                              ? formData.bucket_2_years
+                              : ''
+                          }
+                          onChange={e => {
+                            const raw = e.target.value;
+                            if (raw === '') {
+                              setFormData({
+                                ...formData,
+                                bucket_2_years: undefined as unknown as number,
+                              });
+                              return;
+                            }
+                            const n = parseInt(raw, 10);
+                            if (Number.isNaN(n)) return;
+                            const years = Math.max(1, Math.min(10, n));
+                            setFormData(prev => {
+                              const next = { ...prev, bucket_2_years: years };
+                              const alloc = computeBucketAllocation(accounts ?? undefined, next);
+                              if (alloc)
+                                next.asset_allocation = { ...prev.asset_allocation, ...alloc };
+                              return next;
+                            });
+                          }}
+                          onBlur={e => {
+                            if (e.target.value === '' || formData.bucket_2_years === undefined) {
+                              const defaultVal =
+                                (formData.bucket_strategy_type || 'A') === 'B' ? 5 : 4;
+                              setFormData(prev => {
+                                const next = { ...prev, bucket_2_years: defaultVal };
+                                const alloc = computeBucketAllocation(accounts ?? undefined, next);
+                                if (alloc)
+                                  next.asset_allocation = { ...prev.asset_allocation, ...alloc };
+                                return next;
+                              });
+                            }
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          min="1"
+                          max="10"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          {(formData.bucket_strategy_type || 'A') === 'B'
+                            ? 'Years of spending in bond bucket'
+                            : 'Years of spending in balanced bucket'}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Rebalancing Threshold %
+                        </label>
+                        <input
+                          type="number"
+                          value={formData.rebalancing_threshold || '5.0'}
+                          onChange={e =>
+                            setFormData({ ...formData, rebalancing_threshold: e.target.value })
+                          }
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          min="0"
+                          max="20"
+                          step="0.1"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Drift % before rebalancing</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Recovery Threshold %
+                        </label>
+                        <input
+                          type="number"
+                          value={formData.recovery_threshold_pct ?? '100'}
+                          onChange={e =>
+                            setFormData({ ...formData, recovery_threshold_pct: e.target.value })
+                          }
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          min="50"
+                          max="100"
+                          step="1"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Refill cash when Bucket 3 reaches this % of previous high (100 = full
+                          recovery)
+                        </p>
+                      </div>
+                    </div>
+                    <div className="mt-3 text-xs text-gray-600 bg-white p-3 rounded border border-blue-200">
+                      <p className="font-semibold mb-1">How it works:</p>
+                      <ul className="list-disc list-inside space-y-1">
+                        <li>
+                          <strong>Bucket 1 (Cash):</strong>{' '}
+                          {formData.bucket_1_years ??
+                            ((formData.bucket_strategy_type || 'A') === 'B' ? 1 : 3)}{' '}
+                          years of spending, 100% cash, 3.5% return
+                        </li>
+                        {(formData.bucket_strategy_type || 'A') === 'B' ? (
+                          <>
+                            <li>
+                              <strong>Bucket 2 (Bonds):</strong> {formData.bucket_2_years ?? 5}{' '}
+                              years of spending, 100% bonds, ~4.5% return
+                            </li>
+                            <li>
+                              <strong>Bucket 3 (Stocks):</strong> Remaining balance, 100% stocks,
+                              6–10% return
+                            </li>
+                          </>
+                        ) : (
+                          <>
+                            <li>
+                              <strong>Bucket 2 (Balanced):</strong> {formData.bucket_2_years ?? 4}{' '}
+                              years of spending, 50% stocks / 50% bonds, 5.25% return
+                            </li>
+                            <li>
+                              <strong>Bucket 3 (Growth):</strong> Remaining balance, 100% stocks,
+                              6–10% return
+                            </li>
+                          </>
+                        )}
+                        <li>
+                          Withdrawals always come from Bucket 1 first, then Bucket 2, then Bucket 3.
+                          When stocks increase, Bucket 1 is refilled from Bucket 3. When stocks
+                          decrease, we wait for recovery before refilling.
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Asset Allocation */}
@@ -1209,7 +1850,44 @@ export function ScenarioModelingPage() {
                     .toFixed(1)}
                   %)
                 </h3>
-                
+                {formData.use_bucket_strategy && (
+                  <div className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded px-3 py-2 mb-3 space-y-1">
+                    <p>
+                      Cash and bond allocation are set by the strategy (years of spending). Edit
+                      only the <strong>stock and REIT</strong> allocations below for the growth
+                      bucket.
+                    </p>
+                    {bucketBreakdown != null ? (
+                      <>
+                        <p className="font-medium">
+                          Cash: {bucketBreakdown.cashPct.toFixed(1)}% · Bonds:{' '}
+                          {bucketBreakdown.bondPct.toFixed(1)}% ·{' '}
+                          <strong>
+                            Stocks available: {bucketBreakdown.stockAvailablePct.toFixed(1)}%
+                          </strong>
+                        </p>
+                        <p
+                          className={
+                            Math.abs(stockAllocationSum - bucketBreakdown.stockAvailablePct) > 0.5
+                              ? 'text-amber-700 font-medium'
+                              : 'text-gray-600'
+                          }
+                        >
+                          Stock allocation total: {stockAllocationSum.toFixed(1)}%{' '}
+                          {Math.abs(stockAllocationSum - bucketBreakdown.stockAvailablePct) > 0.5
+                            ? `(should equal ${bucketBreakdown.stockAvailablePct.toFixed(1)}%)`
+                            : ''}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-gray-600">
+                        Add accounts with balances to see cash/bond/stock breakdown from bucket
+                        years.
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 {/* US Equities */}
                 <div className="mb-3">
                   <h4 className="text-sm font-medium text-gray-600 mb-2">US Equities</h4>
@@ -1219,13 +1897,37 @@ export function ScenarioModelingPage() {
                       { key: 'us_small_cap_value', label: 'Small Cap Value (VBR)', return: '8.5%' },
                     ].map(({ key, label, return: ret }) => (
                       <div key={key} className="flex items-center gap-2">
-                        <label className="w-40 text-xs text-gray-700" title={`Expected: ${ret}`}>{label}</label>
+                        <label className="w-40 text-xs text-gray-700" title={`Expected: ${ret}`}>
+                          {label}
+                        </label>
                         <input
                           type="number"
-                          value={formData.asset_allocation[key as keyof AssetAllocation]}
-                          onChange={(e) =>
-                            handleAllocationChange(key as keyof AssetAllocation, e.target.value)
+                          value={
+                            formData.use_bucket_strategy && bucketBreakdown
+                              ? (parseFloat(
+                                  String(
+                                    formData.asset_allocation[key as keyof AssetAllocation] || '0'
+                                  )
+                                ) /
+                                  (bucketBreakdown.stockAvailablePct > 0
+                                    ? bucketBreakdown.stockAvailablePct
+                                    : 1)) *
+                                100
+                              : formData.asset_allocation[key as keyof AssetAllocation]
                           }
+                          onChange={e => {
+                            const withinStocksPct = parseFloat(e.target.value || '0');
+                            if (formData.use_bucket_strategy && bucketBreakdown) {
+                              const absPct =
+                                (withinStocksPct / 100) * bucketBreakdown.stockAvailablePct;
+                              handleAllocationChange(
+                                key as keyof AssetAllocation,
+                                absPct.toFixed(2)
+                              );
+                              return;
+                            }
+                            handleAllocationChange(key as keyof AssetAllocation, e.target.value);
+                          }}
                           className="w-16 px-2 py-1 border border-gray-300 rounded-md text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           min="0"
                           max="100"
@@ -1243,18 +1945,46 @@ export function ScenarioModelingPage() {
                   <div className="grid grid-cols-2 gap-2">
                     {[
                       { key: 'total_foreign_stock', label: 'Total Intl (VXUS)', return: '7.0%' },
-                      { key: 'international_small_cap_value', label: 'Intl Small Cap (VSS)', return: '8.0%' },
+                      {
+                        key: 'international_small_cap_value',
+                        label: 'Intl Small Cap (VSS)',
+                        return: '8.0%',
+                      },
                       { key: 'developed_markets', label: 'Developed (VEA)', return: '6.5%' },
                       { key: 'emerging_markets', label: 'Emerging (VWO)', return: '8.0%' },
                     ].map(({ key, label, return: ret }) => (
                       <div key={key} className="flex items-center gap-2">
-                        <label className="w-40 text-xs text-gray-700" title={`Expected: ${ret}`}>{label}</label>
+                        <label className="w-40 text-xs text-gray-700" title={`Expected: ${ret}`}>
+                          {label}
+                        </label>
                         <input
                           type="number"
-                          value={formData.asset_allocation[key as keyof AssetAllocation]}
-                          onChange={(e) =>
-                            handleAllocationChange(key as keyof AssetAllocation, e.target.value)
+                          value={
+                            formData.use_bucket_strategy && bucketBreakdown
+                              ? (parseFloat(
+                                  String(
+                                    formData.asset_allocation[key as keyof AssetAllocation] || '0'
+                                  )
+                                ) /
+                                  (bucketBreakdown.stockAvailablePct > 0
+                                    ? bucketBreakdown.stockAvailablePct
+                                    : 1)) *
+                                100
+                              : formData.asset_allocation[key as keyof AssetAllocation]
                           }
+                          onChange={e => {
+                            const withinStocksPct = parseFloat(e.target.value || '0');
+                            if (formData.use_bucket_strategy && bucketBreakdown) {
+                              const absPct =
+                                (withinStocksPct / 100) * bucketBreakdown.stockAvailablePct;
+                              handleAllocationChange(
+                                key as keyof AssetAllocation,
+                                absPct.toFixed(2)
+                              );
+                              return;
+                            }
+                            handleAllocationChange(key as keyof AssetAllocation, e.target.value);
+                          }}
                           className="w-16 px-2 py-1 border border-gray-300 rounded-md text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           min="0"
                           max="100"
@@ -1270,47 +2000,93 @@ export function ScenarioModelingPage() {
                 <div className="mb-3">
                   <h4 className="text-sm font-medium text-gray-600 mb-2">Real Estate</h4>
                   <div className="grid grid-cols-2 gap-2">
-                    {[
-                      { key: 'reits', label: 'REITs (VNQ)', return: '9.5%' },
-                    ].map(({ key, label, return: ret }) => (
-                      <div key={key} className="flex items-center gap-2">
-                        <label className="w-40 text-xs text-gray-700" title={`Expected: ${ret}`}>{label}</label>
-                        <input
-                          type="number"
-                          value={formData.asset_allocation[key as keyof AssetAllocation]}
-                          onChange={(e) =>
-                            handleAllocationChange(key as keyof AssetAllocation, e.target.value)
-                          }
-                          className="w-16 px-2 py-1 border border-gray-300 rounded-md text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                          min="0"
-                          max="100"
-                          step="0.01"
-                        />
-                        <span className="text-xs text-gray-400">%</span>
-                      </div>
-                    ))}
+                    {[{ key: 'reits', label: 'REITs (VNQ)', return: '9.5%' }].map(
+                      ({ key, label, return: ret }) => (
+                        <div key={key} className="flex items-center gap-2">
+                          <label className="w-40 text-xs text-gray-700" title={`Expected: ${ret}`}>
+                            {label}
+                          </label>
+                          <input
+                            type="number"
+                            value={
+                              formData.use_bucket_strategy && bucketBreakdown
+                                ? (parseFloat(
+                                    String(
+                                      formData.asset_allocation[key as keyof AssetAllocation] || '0'
+                                    )
+                                  ) /
+                                    (bucketBreakdown.stockAvailablePct > 0
+                                      ? bucketBreakdown.stockAvailablePct
+                                      : 1)) *
+                                  100
+                                : formData.asset_allocation[key as keyof AssetAllocation]
+                            }
+                            onChange={e => {
+                              const withinStocksPct = parseFloat(e.target.value || '0');
+                              if (formData.use_bucket_strategy && bucketBreakdown) {
+                                const absPct =
+                                  (withinStocksPct / 100) * bucketBreakdown.stockAvailablePct;
+                                handleAllocationChange(
+                                  key as keyof AssetAllocation,
+                                  absPct.toFixed(2)
+                                );
+                                return;
+                              }
+                              handleAllocationChange(key as keyof AssetAllocation, e.target.value);
+                            }}
+                            className="w-16 px-2 py-1 border border-gray-300 rounded-md text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            min="0"
+                            max="100"
+                            step="0.01"
+                          />
+                          <span className="text-xs text-gray-400">%</span>
+                        </div>
+                      )
+                    )}
                   </div>
                 </div>
 
-                {/* Fixed Income */}
+                {/* Fixed Income - read-only when bucket strategy is on */}
                 <div className="mb-3">
-                  <h4 className="text-sm font-medium text-gray-600 mb-2">Fixed Income</h4>
+                  <h4 className="text-sm font-medium text-gray-600 mb-2">
+                    Fixed Income
+                    {formData.use_bucket_strategy && (
+                      <span className="ml-2 text-xs font-normal text-amber-600">
+                        (set by bucket strategy)
+                      </span>
+                    )}
+                  </h4>
                   <div className="grid grid-cols-2 gap-2">
                     {[
                       { key: 'bonds', label: 'Total Bond (BND)', return: '4.5%' },
-                      { key: 'short_term_treasuries', label: 'Short Treasury (VGSH)', return: '4.0%' },
-                      { key: 'intermediate_term_treasuries', label: 'Interm Treasury (VGIT)', return: '4.2%' },
+                      {
+                        key: 'short_term_treasuries',
+                        label: 'Short Treasury (VGSH)',
+                        return: '4.0%',
+                      },
+                      {
+                        key: 'intermediate_term_treasuries',
+                        label: 'Interm Treasury (VGIT)',
+                        return: '4.2%',
+                      },
                       { key: 'municipal_bonds', label: 'Muni Bonds (VTEB)', return: '3.5%' },
                     ].map(({ key, label, return: ret }) => (
                       <div key={key} className="flex items-center gap-2">
-                        <label className="w-40 text-xs text-gray-700" title={`Expected: ${ret}`}>{label}</label>
+                        <label className="w-40 text-xs text-gray-700" title={`Expected: ${ret}`}>
+                          {label}
+                        </label>
                         <input
                           type="number"
                           value={formData.asset_allocation[key as keyof AssetAllocation]}
-                          onChange={(e) =>
+                          onChange={e =>
                             handleAllocationChange(key as keyof AssetAllocation, e.target.value)
                           }
-                          className="w-16 px-2 py-1 border border-gray-300 rounded-md text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          readOnly={!!formData.use_bucket_strategy}
+                          className={`w-16 px-2 py-1 border rounded-md text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                            formData.use_bucket_strategy
+                              ? 'border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed'
+                              : 'border-gray-300'
+                          }`}
                           min="0"
                           max="100"
                           step="0.01"
@@ -1321,30 +2097,47 @@ export function ScenarioModelingPage() {
                   </div>
                 </div>
 
-                {/* Cash & Other */}
+                {/* Cash & Other - cash read-only when bucket strategy is on */}
                 <div>
-                  <h4 className="text-sm font-medium text-gray-600 mb-2">Cash & Other</h4>
+                  <h4 className="text-sm font-medium text-gray-600 mb-2">
+                    Cash & Other
+                    {formData.use_bucket_strategy && (
+                      <span className="ml-2 text-xs font-normal text-amber-600">
+                        (cash set by bucket strategy)
+                      </span>
+                    )}
+                  </h4>
                   <div className="grid grid-cols-2 gap-2">
                     {[
-                      { key: 'cash', label: 'Cash (VMFXX)', return: '3.5%' },
-                      { key: 'other', label: 'Other', return: '5.0%' },
-                    ].map(({ key, label, return: ret }) => (
-                      <div key={key} className="flex items-center gap-2">
-                        <label className="w-40 text-xs text-gray-700" title={`Expected: ${ret}`}>{label}</label>
-                        <input
-                          type="number"
-                          value={formData.asset_allocation[key as keyof AssetAllocation]}
-                          onChange={(e) =>
-                            handleAllocationChange(key as keyof AssetAllocation, e.target.value)
-                          }
-                          className="w-16 px-2 py-1 border border-gray-300 rounded-md text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                          min="0"
-                          max="100"
-                          step="0.01"
-                        />
-                        <span className="text-xs text-gray-400">%</span>
-                      </div>
-                    ))}
+                      { key: 'cash', label: 'Cash (VMFXX)', return: '3.5%', lockWhenBucket: true },
+                      { key: 'other', label: 'Other', return: '5.0%', lockWhenBucket: false },
+                    ].map(({ key, label, return: ret, lockWhenBucket }) => {
+                      const readOnly = !!(formData.use_bucket_strategy && lockWhenBucket);
+                      return (
+                        <div key={key} className="flex items-center gap-2">
+                          <label className="w-40 text-xs text-gray-700" title={`Expected: ${ret}`}>
+                            {label}
+                          </label>
+                          <input
+                            type="number"
+                            value={formData.asset_allocation[key as keyof AssetAllocation]}
+                            onChange={e =>
+                              handleAllocationChange(key as keyof AssetAllocation, e.target.value)
+                            }
+                            readOnly={readOnly}
+                            className={`w-16 px-2 py-1 border rounded-md text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                              readOnly
+                                ? 'border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed'
+                                : 'border-gray-300'
+                            }`}
+                            min="0"
+                            max="100"
+                            step="0.01"
+                          />
+                          <span className="text-xs text-gray-400">%</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -1366,8 +2159,8 @@ export function ScenarioModelingPage() {
                   {createMutation.isLoading || updateMutation.isLoading
                     ? 'Saving...'
                     : editingScenario
-                    ? 'Update Scenario'
-                    : 'Create Scenario'}
+                      ? 'Update Scenario'
+                      : 'Create Scenario'}
                 </button>
               </div>
             </form>

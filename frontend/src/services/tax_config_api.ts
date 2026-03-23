@@ -9,10 +9,10 @@ import type {
   StandardDeductions,
 } from '../types/tax_config';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8005';
+import { API_BASE_URL } from '../config/api';
 
 const apiClient = axios.create({
-  baseURL: `${API_URL}/api/v1`,
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -48,7 +48,9 @@ export const taxConfigApi = {
     return response.data;
   },
 
-  getStandardDeductions: async (taxYear: number): Promise<{
+  getStandardDeductions: async (
+    taxYear: number
+  ): Promise<{
     tax_year: number;
     standard_deductions: StandardDeductions;
   }> => {
@@ -81,7 +83,9 @@ export const taxConfigApi = {
   },
 
   getEstimatedAnnualIncome: async (): Promise<EstimatedAnnualIncome> => {
-    const response = await apiClient.get<EstimatedAnnualIncome>('/tax-config/estimated-annual-income');
+    const response = await apiClient.get<EstimatedAnnualIncome>(
+      '/tax-config/estimated-annual-income'
+    );
     return response.data;
   },
 };

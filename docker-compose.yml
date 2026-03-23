@@ -50,6 +50,8 @@ services:
       - "3005:3000"
     environment:
       VITE_API_URL: ${VITE_API_URL}
+      # In Docker the proxy must target the backend service; localhost would be the container itself (ECONNREFUSED)
+      VITE_PROXY_TARGET: http://backend:8000
     depends_on:
       - backend
     command: npm run dev

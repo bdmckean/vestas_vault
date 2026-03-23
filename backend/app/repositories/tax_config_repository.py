@@ -33,6 +33,7 @@ class TaxConfigRepository:
         primary_age: int | None = None,
         spouse_age: int | None = None,
         annual_income: Decimal | None = None,
+        state: str | None = None,
     ) -> TaxConfig:
         """Update existing tax configuration."""
         tax_config.filing_status = filing_status
@@ -40,6 +41,8 @@ class TaxConfigRepository:
         tax_config.primary_age = primary_age
         tax_config.spouse_age = spouse_age
         tax_config.annual_income = annual_income
+        if state is not None:
+            tax_config.state = state
         self.db.commit()
         self.db.refresh(tax_config)
         return tax_config

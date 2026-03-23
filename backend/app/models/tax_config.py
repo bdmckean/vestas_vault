@@ -1,7 +1,5 @@
 """Tax configuration database model."""
 
-from datetime import datetime
-
 from sqlalchemy import Column, DateTime, Numeric, Integer, String
 from sqlalchemy.sql import func
 
@@ -34,6 +32,12 @@ class TaxConfig(Base):
         Numeric(12, 2),
         nullable=True,
         comment="Annual income (for bonus senior deduction eligibility)",
+    )
+    state = Column(
+        String(10),
+        nullable=True,
+        default="CO",
+        comment="State of residence for state income tax (e.g. CO, OTHER)",
     )
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(

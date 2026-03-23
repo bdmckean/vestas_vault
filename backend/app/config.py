@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     database_url: str
     environment: str = "development"
     debug: bool = False
+    log_level: str | None = (
+        None  # e.g. DEBUG, INFO, WARNING, ERROR; default INFO (or DEBUG when debug=True)
+    )
     api_v1_prefix: str = "/api/v1"
 
     model_config = SettingsConfigDict(

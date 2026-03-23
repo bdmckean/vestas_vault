@@ -1,8 +1,8 @@
 # Product Requirements Document (PRD)
 ## Retirement Planning Application - Vestas Vault
 
-**Version:** 1.0  
-**Last Updated:** February 5, 2026  
+**Version:** 1.1
+**Last Updated:** February 23, 2026
 **Status:** Draft
 
 ---
@@ -69,8 +69,8 @@ A web-based application that:
 ## User Personas
 
 ### Primary Persona: Pre-Retiree (Age 60-66)
-**Name:** Robert  
-**Age:** 66  
+**Name:** Robert
+**Age:** 66
 **Situation:** Approaching retirement, has accumulated savings in multiple account types
 
 **Goals:**
@@ -88,8 +88,8 @@ A web-based application that:
 **Tech Comfort:** Moderate - comfortable with web applications
 
 ### Secondary Persona: Retiree (Age 67-75)
-**Name:** Susan  
-**Age:** 70  
+**Name:** Susan
+**Age:** 70
 **Situation:** Recently retired, receiving Social Security, managing withdrawals
 
 **Goals:**
@@ -107,8 +107,8 @@ A web-based application that:
 **Tech Comfort:** Moderate - prefers simple, clear interfaces
 
 ### Tertiary Persona: Financial Planner
-**Name:** Michael  
-**Age:** 45  
+**Name:** Michael
+**Age:** 45
 **Situation:** Financial advisor helping clients plan retirement
 
 **Goals:**
@@ -128,8 +128,8 @@ A web-based application that:
 ---
 
 ### Secondary Persona: Pre-Retiree Accumulator (Age 30-50)
-**Name:** Jessica  
-**Age:** 35  
+**Name:** Jessica
+**Age:** 35
 **Situation:** Early in career, actively saving for retirement, 30+ years until retirement
 
 **Goals:**
@@ -183,8 +183,8 @@ A web-based application that:
 ## User Stories & Requirements
 
 ### Epic 1: Account Management
-**As a** user  
-**I want to** track my retirement accounts  
+**As a** user
+**I want to** track my retirement accounts
 **So that** I can see my total portfolio and plan withdrawals
 
 #### User Stories
@@ -205,8 +205,8 @@ A web-based application that:
 ---
 
 ### Epic 2: Social Security Planning
-**As a** user  
-**I want to** model different Social Security claiming strategies  
+**As a** user
+**I want to** model different Social Security claiming strategies
 **So that** I can determine the optimal claiming age
 
 #### User Stories
@@ -221,15 +221,16 @@ A web-based application that:
 - Early/late retirement reductions are calculated correctly
 - Projections show monthly amounts for ages 62-70
 - COLA adjustments are applied to projections
-- Partner/spouse benefits can be modeled (future)
+- Partner/spouse benefits can be modeled (dual SS, spousal 50%, own vs ½ partner's, default scenario ages)
+- COLA applied from current date to benefit start year (and each year after) in scenario projections; SS page shows primary and spouse projections by start age
 
-**Status:** ⚠️ Partial (missing partner/spouse support)
+**Status:** ✅ Implemented (incl. partner/spouse benefits, default scenario ages, COLA from current date to start)
 
 ---
 
 ### Epic 3: Other Income Sources
-**As a** user  
-**I want to** track income beyond Social Security  
+**As a** user
+**I want to** track income beyond Social Security
 **So that** I can model total retirement income accurately
 
 #### User Stories
@@ -251,8 +252,8 @@ A web-based application that:
 ---
 
 ### Epic 4: Spending Planning
-**As a** user  
-**I want to** model my retirement spending  
+**As a** user
+**I want to** model my retirement spending
 **So that** I can ensure my portfolio lasts
 
 #### User Stories
@@ -276,8 +277,8 @@ A web-based application that:
 ---
 
 ### Epic 5: Tax Planning
-**As a** user  
-**I want to** understand tax implications  
+**As a** user
+**I want to** understand tax implications
 **So that** I can optimize my withdrawal strategy
 
 #### User Stories
@@ -299,8 +300,8 @@ A web-based application that:
 ---
 
 ### Epic 6: Scenario Modeling
-**As a** user  
-**I want to** create and compare retirement scenarios  
+**As a** user
+**I want to** create and compare retirement scenarios
 **So that** I can choose the best strategy
 
 #### User Stories
@@ -323,8 +324,8 @@ A web-based application that:
 ---
 
 ### Epic 7: Retirement Projections
-**As a** user  
-**I want to** see year-by-year projections  
+**As a** user
+**I want to** see year-by-year projections
 **So that** I can understand long-term outcomes
 
 #### User Stories
@@ -341,13 +342,13 @@ A web-based application that:
 - Taxes are calculated accurately
 - RMDs are calculated at age 75+ (future)
 
-**Status:** ⚠️ Partial (missing account type segregation, RMDs)
+**Status:** ⚠️ Partial — Account type segregation and withdrawals by type done; RMDs not yet implemented.
 
 ---
 
 ### Epic 8: Visualizations
-**As a** user  
-**I want to** see graphs of my projections  
+**As a** user
+**I want to** see graphs of my projections
 **So that** I can quickly understand trends
 
 #### User Stories
@@ -370,8 +371,8 @@ A web-based application that:
 ---
 
 ### Epic 9: Accumulation Phase Planning (Secondary)
-**As a** pre-retiree accumulator  
-**I want to** model my retirement savings growth over time  
+**As a** pre-retiree accumulator
+**I want to** model my retirement savings growth over time
 **So that** I can plan how much to save and when to retire
 
 #### User Stories
@@ -395,8 +396,8 @@ A web-based application that:
 ---
 
 ### Epic 10: Guardrails & Monitoring
-**As a** user  
-**I want to** set guardrails and monitor my portfolio  
+**As a** user
+**I want to** set guardrails and monitor my portfolio
 **So that** I can adjust spending when needed to maintain viability
 
 #### User Stories
@@ -417,12 +418,12 @@ A web-based application that:
 
 ---
 
-### Epic 11: Stress Testing
-**As a** user  
-**I want to** test my portfolio against historical market downturns  
-**So that** I can understand sequence of returns risk
+### Epic 11: Stress Testing & Monte Carlo
+**As a** user
+**I want to** test my portfolio against historical downturns and probabilistic outcomes
+**So that** I can understand sequence-of-returns risk and the range of possible futures
 
-#### User Stories
+#### User Stories — Historical Stress Testing
 - **US-11.1**: As a user, I want to run my scenario using actual historical returns so I can see real-world outcomes
 - **US-11.2**: As a user, I want to select specific historical periods (e.g., 2000-2002, 2008-2009) so I can test against known crashes
 - **US-11.3**: As a user, I want to use worst-case historical periods so I can see my portfolio's resilience
@@ -430,21 +431,24 @@ A web-based application that:
 - **US-11.5**: As a user, I want to see which historical periods would cause portfolio depletion so I can adjust my strategy
 - **US-11.6**: As a user, I want to test multiple historical periods at once so I can see a range of outcomes
 
+#### User Stories — Monte Carlo Simulations
+- **US-11.7**: As a user, I want to run Monte Carlo simulations so I can see a distribution of outcomes (e.g., success rate, percentiles)
+- **US-11.8**: As a user, I want to set the number of simulations and time horizon so I can balance speed vs insight
+- **US-11.9**: As a user, I want to see success rate (e.g., % of paths where portfolio survives) so I can gauge plan robustness
+- **US-11.10**: As a user, I want to see percentile outcomes (e.g., 10th, 50th, 90th final balance) so I can plan for a range of futures
+- **US-11.11**: As a user, I want return assumptions (mean, volatility, possibly correlation) to drive the simulations so results reflect my asset allocation
+
 **Acceptance Criteria:**
-- Historical returns are applied year-by-year (not averaged)
-- User can select start year for historical period
-- System identifies worst-case periods automatically
-- Comparison shows baseline vs stress test
-- Multiple stress tests can be run simultaneously
-- Clear warnings about past performance not predicting future
+- **Historical:** Returns applied year-by-year; user can select period; worst-case finder; baseline vs stress comparison; warnings about past performance
+- **Monte Carlo:** User can run N simulations over projection horizon; success rate and percentile outcomes (e.g., 10th/50th/90th) shown; assumptions configurable or derived from scenario; clear labeling that outcomes are probabilistic
 
 **Status:** ❌ Not Implemented
 
 ---
 
 ### Epic 12: Portfolio Management & Rebalancing
-**As a** user  
-**I want to** manage my portfolio allocation and rebalancing  
+**As a** user
+**I want to** manage my portfolio allocation and rebalancing
 **So that** I can maintain my target asset allocation over time
 
 #### User Stories
@@ -464,8 +468,8 @@ A web-based application that:
 ---
 
 ### Epic 13: Qualified Charitable Distributions (QCDs)
-**As a** user  
-**I want to** model Qualified Charitable Distributions  
+**As a** user
+**I want to** model Qualified Charitable Distributions
 **So that** I can optimize RMDs and reduce taxes
 
 #### User Stories
@@ -484,8 +488,8 @@ A web-based application that:
 ---
 
 ### Epic 14: Annual Review & Monitoring
-**As a** user  
-**I want to** perform annual reviews of my retirement plan  
+**As a** user
+**I want to** perform annual reviews of my retirement plan
 **So that** I can adjust strategy as needed
 
 #### User Stories
@@ -507,8 +511,8 @@ A web-based application that:
 ---
 
 ### Epic 15: Contingency Planning
-**As a** user  
-**I want to** model contingency scenarios  
+**As a** user
+**I want to** model contingency scenarios
 **So that** I can plan for unexpected events
 
 #### User Stories
@@ -529,8 +533,8 @@ A web-based application that:
 ---
 
 ### Epic 16: Emergency Fund Management
-**As a** user  
-**I want to** track and manage my emergency fund (Roth account)  
+**As a** user
+**I want to** track and manage my emergency fund (Roth account)
 **So that** I can plan for unexpected expenses
 
 #### User Stories
@@ -554,7 +558,7 @@ A web-based application that:
 ## Feature Specifications
 
 ### Feature: Accumulation Phase Planning (Secondary)
-**Priority:** 🟢 Medium (Secondary Requirement)  
+**Priority:** 🟢 Medium (Secondary Requirement)
 **Status:** ❌ Not Implemented
 
 **Description:**
@@ -664,7 +668,7 @@ Support retirement planning for users in accumulation phase (30s-50s) who are sa
 ---
 
 ### Feature: Guardrails & Spending Adjustments
-**Priority:** 🟢 Medium (Secondary Requirement)  
+**Priority:** 🟢 Medium (Secondary Requirement)
 **Status:** ❌ Not Implemented
 
 **Description:**
@@ -711,7 +715,7 @@ Automatically adjust spending when portfolio balance drops below specified thres
 ---
 
 ### Feature: Portfolio Rebalancing
-**Priority:** 🟢 Medium  
+**Priority:** 🟢 Medium
 **Status:** ⚠️ Partial (field exists, logic not implemented)
 
 **Description:**
@@ -750,7 +754,7 @@ Maintain target asset allocation over time through periodic rebalancing.
 ---
 
 ### Feature: Qualified Charitable Distributions (QCDs)
-**Priority:** 🟢 Low (Secondary Requirement)  
+**Priority:** 🟢 Low (Secondary Requirement)
 **Status:** ❌ Not Implemented
 
 **Description:**
@@ -790,7 +794,7 @@ Model Qualified Charitable Distributions from IRAs to reduce taxable RMDs.
 ---
 
 ### Feature: Annual Review & Monitoring
-**Priority:** 🟢 Medium (Secondary Requirement)  
+**Priority:** 🟢 Medium (Secondary Requirement)
 **Status:** ❌ Not Implemented
 
 **Description:**
@@ -842,8 +846,8 @@ Provide annual review checklist and monitoring tools to track retirement plan he
 ---
 
 ### Feature: Account Type Segregation
-**Priority:** 🔴 Critical  
-**Status:** ❌ Not Implemented
+**Priority:** 🔴 Critical
+**Status:** ✅ Implemented
 
 **Description:**
 Track separate balances for pretax, Roth, taxable, and cash accounts throughout projections instead of aggregating everything.
@@ -869,34 +873,211 @@ Track separate balances for pretax, Roth, taxable, and cash accounts throughout 
 ---
 
 ### Feature: Bucket Strategy
-**Priority:** 🟡 High  
-**Status:** ❌ Not Implemented
+**Priority:** 🟡 High
+**Status:** ⚠️ Partial — **Strategy A** and **Strategy B** implemented (A: 3yr cash, 4yr balanced, growth; B: 1yr cash, 5yr bonds, stocks). Rebalancing, refill, and withdrawal sequencing in place. **Remaining:** Scenario builder locking (when bucket is on, fix cash/bond allocation and only allow editing stock allocation for remaining assets) not yet implemented.
 
 **Description:**
-Implement time-based return rates that change over the projection period (conservative early, aggressive later).
+Implement a dynamic bucket strategy that organizes retirement assets into separate buckets based on time horizon and risk tolerance, with intelligent rebalancing and withdrawal sequencing that responds to market conditions. This strategy protects near-term spending needs while allowing long-term growth assets to recover from market downturns.
 
-**Requirements:**
-- Years 1-3: 3.5% return (100% Cash)
-- Years 4-7: 5.25% return (50/50 Balanced)
-- Years 8-10: 6.0% return (100% Stocks)
-- Years 11-30: 10.0% return (Historical average)
+**Background:**
+The bucket strategy (also known as time-segmented portfolio strategy) divides retirement assets into separate buckets, each invested according to when the money will be needed. Unlike a simple time-based return approach, this strategy includes dynamic rebalancing logic that responds to market performance, avoiding forced selling of depressed assets during market downturns.
+
+**Bucket Structure:**
+
+**Strategy A: 3-Year Cash / 4-Year Balanced / Growth (default)**
+
+The portfolio is divided into three buckets:
+
+1. **Bucket 1 - Cash (Years 1-3):**
+   - **Initial Allocation:** 3 years of spending needs
+   - **Asset Allocation:** 100% Cash / Money Market
+   - **Expected Return:** 3.5% (VMFXX - Vanguard Money Market)
+   - **Purpose:** Provides immediate liquidity to avoid selling assets during market downturns
+
+2. **Bucket 2 - Balanced (Years 4-7):**
+   - **Initial Allocation:** 4 years of spending needs
+   - **Asset Allocation:** 50% Stocks / 50% Bonds
+   - **Expected Return:** 5.25% (blended return)
+   - **Purpose:** Intermediate-term assets with moderate risk
+
+3. **Bucket 3 - Growth (Years 8+):**
+   - **Initial Allocation:** Remaining portfolio balance
+   - **Asset Allocation:** 100% Stocks (with international diversification)
+   - **Expected Return:** 6.0% (years 8-10), 10.0% (years 11+)
+   - **Purpose:** Long-term growth assets with minimal near-term withdrawal pressure
+
+**Strategy B: 1-Year Cash / 5-Year Bonds / Stocks**
+
+Alternative bucket structure for users who prefer a smaller cash buffer and a dedicated bond bucket:
+
+1. **Bucket 1 - Cash (1 year):**
+   - **Initial Allocation:** 1 year of spending needs
+   - **Asset Allocation:** 100% Cash / Money Market
+   - **Expected Return:** ~3.5% (e.g. Vanguard Money Market)
+   - **Purpose:** Minimal near-term liquidity; more capital in bonds and stocks
+
+2. **Bucket 2 - Bonds (Years 2–6):**
+   - **Initial Allocation:** 5 years of spending needs
+   - **Asset Allocation:** 100% Bonds (e.g. intermediate-term, aggregate)
+   - **Expected Return:** ~4–5% (bond market assumptions)
+   - **Purpose:** Stable income and capital for years 2–6; no equity in this bucket
+
+3. **Bucket 3 - Stocks (Remaining):**
+   - **Initial Allocation:** Remaining portfolio balance
+   - **Asset Allocation:** 100% Stocks (with international diversification)
+   - **Expected Return:** Per long-term equity assumptions (e.g. 6–10% depending on horizon)
+   - **Purpose:** Long-term growth; withdrawn only after cash and bonds are used or per rebalancing rules
+
+**Withdrawal sequencing for Strategy B:** Withdraw spending from Bucket 1 (Cash) first, then from Bucket 2 (Bonds), then from Bucket 3 (Stocks). Rebalancing and refill rules (e.g. when to top up cash from bonds or stocks) can mirror Strategy A’s logic or be simplified (e.g. annual refill of cash from bonds, then from stocks if needed).
+
+**Withdrawal Sequencing:**
+
+- **Primary Source:** Always withdraw from Bucket 1 (Cash) first
+- **Rationale:** Preserves growth assets and avoids forced selling during market downturns
+- **Annual Process:** Each year, withdraw annual spending needs from Bucket 1
+
+**Rebalancing Logic:**
+
+The strategy includes dynamic rebalancing that responds to market conditions:
+
+#### Scenario 1: Stocks Increase (Bull Market)
+
+**When:** Stock returns are positive for the year
+
+**Actions:**
+1. **Withdraw annual spending** from Bucket 1 (Cash)
+2. **Move excess from Bucket 3 to Bucket 1:** If Bucket 3 (Stocks) has grown, transfer enough to maintain 3 years of spending in Bucket 1
+3. **Rebalance Bucket 2:** Rebalance the 50/50 allocation back to target if drift has occurred
+4. **Rebalance Bucket 3:** Ensure Bucket 3 maintains target stock allocation
+
+**Example:**
+- Bucket 1 has 2 years remaining after withdrawal
+- Bucket 3 stocks increased 15%
+- Transfer 1 year of spending from Bucket 3 to Bucket 1
+- Rebalance Bucket 2 to 50/50
+
+#### Scenario 2: Stocks Decrease (Bear Market)
+
+**When:** Stock returns are negative for the year
+
+**Actions:**
+1. **Withdraw annual spending** from Bucket 1 (Cash) only
+2. **Do NOT sell stocks:** Do not transfer from Bucket 3 (Stocks) to Bucket 1
+3. **Rebalance Bucket 2:** Rebalance the 50/50 allocation back to target (may involve selling bonds to buy stocks if stocks are down)
+4. **Wait for recovery:** Allow Bucket 3 stocks to recover before refilling cash
+
+**Rationale:** Avoids locking in losses by selling depressed stocks
+
+**Example:**
+- Bucket 1 has 2 years remaining after withdrawal
+- Bucket 3 stocks decreased 20%
+- Do NOT transfer from Bucket 3
+- Rebalance Bucket 2 to 50/50 (buy stocks with bond proceeds if stocks are down)
+
+#### Scenario 3: Stocks Recover After Decline
+
+**When:** Stocks have recovered to previous high (or exceeded it) after a decline
+
+**Actions:**
+1. **Refill Bucket 1:** Transfer enough from Bucket 3 to restore 3 years of spending in Bucket 1
+2. **Rebalance Bucket 2:** Ensure 50/50 allocation is maintained
+3. **Continue normal operations:** Resume Scenario 1 logic going forward
+
+**Example:**
+- Bucket 1 has 1 year remaining
+- Bucket 3 stocks have recovered to pre-decline levels
+- Transfer 2 years of spending from Bucket 3 to Bucket 1 (restore to 3 years)
+- Rebalance Bucket 2 to 50/50
+
+#### Scenario 4: Cash Exhausted, Stocks Still Down
+
+**When:** Bucket 1 (Cash) is depleted but stocks have not yet recovered
+
+**Actions:**
+1. **Withdraw from Bucket 2 bonds:** Take 1 year of spending from the bond portion of Bucket 2 (50/50)
+2. **Rebalance Bucket 2:** After withdrawal, rebalance remaining Bucket 2 assets back to 50/50
+3. **Continue waiting:** Do not sell stocks from Bucket 3 until they recover
+4. **Monitor:** Track Bucket 2 depletion and Bucket 3 recovery status
+
+**Rationale:** Uses intermediate-term bonds before forcing stock sales, giving stocks more time to recover
+
+**Example:**
+- Bucket 1 is empty
+- Bucket 3 stocks are still down 15% from peak
+- Withdraw 1 year of spending from Bucket 2 bonds
+- Rebalance Bucket 2 remaining assets to 50/50
+- Continue monitoring for stock recovery
+
+**Edge Cases:**
+
+- **Bucket 2 Exhausted:** If Bucket 2 is also depleted and stocks haven't recovered, then (and only then) withdraw from Bucket 3 stocks, accepting the loss
+- **Multiple Years of Decline:** Continue withdrawing from Bucket 2 bonds, rebalancing each year, until stocks recover or Bucket 2 is exhausted
+- **Rapid Recovery:** If stocks recover quickly, immediately refill Bucket 1 to 3 years
+
+**Configuration Options:**
+
+- **Enable/Disable:** Users can enable or disable bucket strategy per scenario
+- **Strategy Type:** Users can choose:
+  - **Strategy A (default):** 3 years cash, 4 years balanced (50/50), remaining in stocks
+  - **Strategy B:** 1 year cash, 5 years bonds, remaining in stocks
+- **Number of years per bucket (user-editable):** The user must be able to set the number of years of expenses for each bucket. Defaults are provided, but the user can change them.
+  - **Strategy A:** User can set cash bucket years (default: 3), balanced bucket years (default: 4). The stocks bucket is the remaining balance (no year count).
+  - **Strategy B:** User can set cash bucket years (default: 1), bond bucket years (default: 5). The stocks bucket is the remaining balance (no year count).
+- **Bucket Sizes (Strategy A):** In addition to years, users can customize:
+  - Initial allocation percentages within the balanced bucket (50/50 default)
+- **Bucket Sizes (Strategy B):** Bond and stock buckets have fixed 100% allocation; only the number of years for cash and bonds is set by the user
+- **Rebalancing Threshold:** Set drift threshold before rebalancing (default: 5%)
+- **Recovery Definition:** Define what constitutes "recovery" (default: stocks return to previous high)
+
+**Scenario Builder Behavior When Bucket Strategy Is Enabled:**
+
+When a bucket strategy is enabled for a scenario, the Scenario builder must treat cash and bond allocation as **fixed** (derived from the bucket strategy) and only allow the user to control **stock** allocation for the remaining assets.
+
+- **Fixed (non-editable) in the Scenario builder:**
+  - **Cash allocation:** Determined by the bucket strategy (e.g. 1 year or 3 years of spending in cash). The dollar amount or percentage reserved for cash is set by the strategy and spending; the user does not edit overall cash allocation.
+  - **Bond allocation:** Determined by the bucket strategy (e.g. 5 years of spending in bonds, or 4 years balanced). The dollar amount or percentage reserved for bonds is set by the strategy and spending; the user does not edit overall bond allocation.
+- **User-editable in the Scenario builder:**
+  - **Stock allocation (remaining assets only):** The portion of the portfolio that is in the “stocks” bucket (Strategy A: Bucket 3; Strategy B: Bucket 3) is the only portion for which the user can set allocation. Within that portion, the user can allocate among stock sub-asset classes (e.g. US vs international, large vs small cap) as percentages that sum to 100% of the stock bucket.
+
+**Rationale:** The bucket strategy defines how much is in cash and bonds by design (years of expenses). The Scenario builder should not allow overriding those amounts; it should only allow the user to decide how the **remaining** (stock) portion is allocated across equity sub-asset classes.
 
 **User Value:**
-- More accurate projections
-- Models realistic retirement strategy
-- Accounts for near-term safety needs
+- **Protection from sequence risk:** Avoids forced selling during market downturns
+- **Psychological comfort:** Clear separation of short-term vs long-term assets
+- **Optimized returns:** Allows growth assets time to recover before withdrawal
+- **Flexibility:** Responds to actual market conditions rather than rigid calendar-based transfers
 
 **Acceptance Criteria:**
-- Return rates change based on projection year
-- Rates match specified buckets
-- Strategy can be enabled/disabled
-- Default configuration matches markdown
+- Buckets are initialized correctly based on spending needs
+- Withdrawals always come from Cash bucket first
+- Rebalancing logic correctly responds to stock performance
+- Bucket 1 is refilled when stocks recover
+- Bucket 2 bonds are used before Bucket 3 stocks during downturns
+- Rebalancing maintains target allocations within buckets
+- Strategy can be enabled/disabled per scenario
+- User can set the number of years for each bucket (cash, balanced/bonds) per strategy; defaults are provided but editable
+- Bucket sizes and thresholds are configurable
+- Edge cases are handled correctly (exhausted buckets, multiple year declines)
+- **When bucket strategy is enabled:** Scenario builder fixes cash and bond allocation (per strategy); user can only set stock (and stock sub-asset) allocation for the remaining assets.
+
+**Technical Implementation Notes:**
+
+- Track bucket balances separately: `bucket_1_balance`, `bucket_2_balance`, `bucket_3_balance`
+- Track stock performance: `bucket_3_previous_high`, `bucket_3_current_value`, `bucket_3_return_pct`
+- Track recovery status: `stocks_in_recovery` (boolean), `recovery_threshold_met` (boolean)
+- Annual rebalancing function: `rebalance_buckets(year, stock_return, spending_needs)`
+- Transfer function: `transfer_between_buckets(from_bucket, to_bucket, amount)`
+
+**References:**
+- Morningstar: "The Bucket Investor's Guide to Setting Retirement Asset Allocation"
+- AAII: "Using the Bucket Approach With Your Retirement Portfolio"
+- Advisor Perspectives: "Time Segmentation as the Compromise Solution for Retirement Income"
 
 ---
 
 ### Feature: Withdrawal Sequencing
-**Priority:** 🟡 High  
-**Status:** ❌ Not Implemented
+**Priority:** 🟡 High
+**Status:** ✅ Implemented
 
 **Description:**
 Withdraw from accounts in a specific order to optimize taxes and preserve Roth accounts.
@@ -921,7 +1102,7 @@ Withdraw from accounts in a specific order to optimize taxes and preserve Roth a
 ---
 
 ### Feature: Roth Conversions
-**Priority:** 🟡 High  
+**Priority:** 🟡 High
 **Status:** ❌ Not Implemented
 
 **Description:**
@@ -947,7 +1128,7 @@ Model annual Roth conversions from pretax accounts with tax implications.
 ---
 
 ### Feature: RMD Calculations
-**Priority:** 🟡 High  
+**Priority:** 🟡 High
 **Status:** ❌ Not Implemented
 
 **Description:**
@@ -973,33 +1154,33 @@ Calculate Required Minimum Distributions starting at age 75.
 ---
 
 ### Feature: Partner/Spouse Social Security
-**Priority:** 🟡 High  
-**Status:** ❌ Not Implemented
+**Priority:** 🟡 High
+**Status:** ⚠️ Partial — Dual/spousal benefits and coordination implemented; survivor benefits (100% of deceased spouse) not yet implemented.
 
 **Description:**
 Support dual Social Security benefits for married couples.
 
 **Requirements:**
-- Track both spouses' Social Security
-- Calculate spousal benefits (up to 50% of higher earner)
-- Calculate survivor benefits (up to 100% of deceased spouse)
-- Model coordination strategies (one claims early, one delays)
+- Track both spouses' Social Security ✅
+- Calculate spousal benefits (up to 50% of higher earner) ✅
+- Calculate survivor benefits (up to 100% of deceased spouse) — not yet
+- Model coordination strategies (one claims early, one delays) ✅
 
 **User Value:**
 - Optimize dual benefits
-- Plan for survivor benefits
+- Plan for survivor benefits (future)
 - Coordinate claiming strategies
 
 **Acceptance Criteria:**
-- Both spouses' SS can be entered
-- Spousal benefits are calculated correctly
-- Survivor benefits are calculated correctly
-- Coordination strategies can be modeled
+- Both spouses' SS can be entered ✅
+- Spousal benefits are calculated correctly ✅
+- Survivor benefits are calculated correctly — not yet
+- Coordination strategies can be modeled ✅
 
 ---
 
 ### Feature: Time-Series Visualizations
-**Priority:** 🟢 Medium  
+**Priority:** 🟢 Medium
 **Status:** ❌ Not Implemented
 
 **Description:**
@@ -1030,7 +1211,7 @@ Provide graphs showing retirement projections over time.
 ---
 
 ### Feature: Historical Stress Testing
-**Priority:** 🟡 High  
+**Priority:** 🟡 High
 **Status:** ❌ Not Implemented
 
 **Description:**
@@ -1112,7 +1293,7 @@ Test portfolio scenarios using actual historical market returns, particularly pe
   - Example: If stress test uses 2000-2009 (10 years) but projection is 30 years:
     - Years 1-10: Use actual 2000-2009 returns
     - Years 11-30: Use average returns from selected period range (default: 1996-2025)
-  
+
 - **Period Range Selection:**
   - User selects period range: 30 years, 50 years, or all available (1970-2025)
   - Average returns calculated from selected range
@@ -1128,7 +1309,7 @@ Test portfolio scenarios using actual historical market returns, particularly pe
     - **Median Case**: Middle outcome
     - **25th Percentile**: Lower quartile
     - **75th Percentile**: Upper quartile
-  
+
 - **Key Metrics for Each Period:**
   - Final portfolio balance
   - Years until depletion (if applicable)
@@ -1154,14 +1335,14 @@ Test portfolio scenarios using actual historical market returns, particularly pe
     - Radio buttons or dropdown: "Last 50 years (1976-2025)"
     - Radio buttons or dropdown: "All available (1970-2025)"
     - Info tooltip: Explains relevance and what each period includes
-  
+
   - **Test Options:**
     - Button: "Run Stress Test" (automatically finds worst cases from selected range)
     - Option: Select number of periods to test (default: 10 worst periods)
     - Option: Filter by period length (3-year, 5-year, 10-year, or all)
     - Option: "Include notable periods" checkbox (2000-2002, 2008-2009, 1973-1974, etc.)
     - Option: "Show individual results" checkbox (show each period separately)
-  
+
   - **Help Text:**
     - "Last 30 years recommended for most users - most relevant to current market conditions"
     - "Last 50 years includes 1970s stagflation period - useful for inflation stress testing"
@@ -1173,7 +1354,7 @@ Test portfolio scenarios using actual historical market returns, particularly pe
     - Range: Best-case to worst-case final balance
     - Baseline comparison: Where baseline falls in the range
     - Key insight: "Your portfolio survives X% of worst-case scenarios"
-  
+
   - **Range Visualization:**
     - Graph: Portfolio balance over time showing:
       - Baseline (solid line)
@@ -1181,18 +1362,18 @@ Test portfolio scenarios using actual historical market returns, particularly pe
       - Worst case (lower bound, dashed)
       - Median (dotted line)
       - Shaded area showing 25th-75th percentile range
-  
+
   - **Comparison Table:**
     - Columns: Period, Start Year, Final Balance, Min Balance, Depletion Year, Status
     - Sortable by any column
     - Highlight worst-case period
     - Show baseline row for comparison
-  
+
   - **Distribution Chart:**
     - Histogram or box plot showing distribution of final balances
     - Mark baseline position
     - Show percentiles
-  
+
   - **Warning:** "Past performance does not predict future results. These stress tests use actual historical returns from the last 30 years."
 
 **User Value:**
@@ -1257,6 +1438,52 @@ Test portfolio scenarios using actual historical market returns, particularly pe
 
 ---
 
+### Feature: Monte Carlo Simulations
+**Priority:** 🟡 High
+**Status:** ❌ Not Implemented
+
+**Description:**
+Run probabilistic simulations (Monte Carlo) to produce a distribution of portfolio outcomes over the projection horizon. Each simulation uses random return paths consistent with the scenario’s expected returns and volatility (and optionally correlation across asset classes), so users can see success rate and percentile outcomes (e.g., 10th/50th/90th final balance) rather than a single deterministic projection.
+
+**Requirements:**
+
+#### Simulation Configuration
+- **Number of simulations:** User-configurable (e.g., 500, 1,000, 5,000); default sufficient for stable percentiles (e.g., 1,000).
+- **Time horizon:** Use scenario’s projection years (e.g., 30 years).
+- **Return assumptions:** Derived from scenario asset allocation and expected-return inputs, or explicit mean/volatility (and optionally correlation) per asset class. Returns can be lognormal or normal; document assumption.
+
+#### Outputs
+- **Success rate:** Percentage of paths where portfolio remains positive (or above a user-defined floor) through the end of the horizon.
+- **Percentile outcomes:** e.g., 10th, 25th, 50th (median), 75th, 90th percentile of terminal portfolio value (and optionally by year).
+- **Distribution view:** Histogram or CDF of final balance; optional display of sample paths (e.g., 5th, 50th, 95th by year).
+- **Baseline comparison:** Show where the single deterministic baseline projection falls within the Monte Carlo distribution (e.g., “Baseline ≈ 55th percentile”).
+
+#### User Experience
+- **Run control:** “Run Monte Carlo” (or similar) with optional number of simulations and horizon.
+- **Performance:** Run simulations in reasonable time (e.g., &lt; 30 seconds for 1,000 × 30-year paths); consider backend batch or async if needed.
+- **Disclaimer:** Clear labeling that results are probabilistic and that past performance does not predict future results.
+
+**User Value:**
+- Understand range of possible outcomes, not just one path
+- Gauge plan robustness via success rate and percentiles
+- Compare baseline strategy to full distribution
+- Support conversations with advisors using percentile outcomes
+
+**Acceptance Criteria:**
+- User can run N Monte Carlo simulations for the current scenario
+- Success rate and percentile outcomes (e.g., 10th/50th/90th final balance) are displayed
+- Return assumptions are documented and driven by scenario (or user input)
+- Baseline projection is comparable to the Monte Carlo distribution
+- Performance is acceptable for default simulation count
+- Appropriate disclaimers are shown
+
+**Technical Considerations:**
+- Reuse existing projection engine; for each path, draw random returns (e.g., from lognormal or normal) per asset class per year and apply same spending/withdrawal/tax logic
+- Asset allocation and expected-return inputs from scenario; volatility (and correlation) from configuration or defaults
+- Consider caching or sampling if full N paths are too heavy for UI (e.g., store percentiles and success rate; optionally store subset of paths for charts)
+
+---
+
 ## Non-Functional Requirements
 
 ### Performance
@@ -1293,7 +1520,6 @@ Test portfolio scenarios using actual historical market returns, particularly pe
 ## Out of Scope
 
 ### Explicitly Excluded
-- **Monte Carlo Simulations**: Not in initial scope (future consideration)
 - **Real-time Market Data**: Uses static projections
 - **Multi-user Collaboration**: Single-user application
 - **Mobile App**: Web application only
@@ -1314,7 +1540,6 @@ Test portfolio scenarios using actual historical market returns, particularly pe
 ## Future Considerations
 
 ### Phase 2 Features (Post-MVP)
-- Monte Carlo simulations
 - Guardrail rules (spending adjustments)
 - What-if scenario comparisons
 - Advanced tax strategies
@@ -1369,10 +1594,12 @@ Test portfolio scenarios using actual historical market returns, particularly pe
 - `SETUP_GUIDE.md` - Developer setup instructions
 
 ### Change Log
+- **2026-02-23**: Monte Carlo simulations moved into current scope: removed from Out of Scope and Phase 2; Epic 11 expanded to "Stress Testing & Monte Carlo" with new user stories (US-11.7–US-11.11) and acceptance criteria; added Feature Specification "Monte Carlo Simulations" with requirements, outputs, and technical considerations.
+- **2026-02-23**: Updated implementation status: Account Type Segregation and Withdrawal Sequencing set to Implemented; Partner/Spouse Social Security set to Partial (dual/spousal implemented; survivor benefits not yet); Bucket Strategy updated (Strategy A and B implemented, scenario builder locking remaining); Epic 2 acceptance criteria updated for COLA from current date to start; version 1.1.
 - **2026-02-05**: Initial PRD created
 
 ---
 
-**Document Owner:** Product Team  
-**Reviewers:** Engineering, Design, Business  
+**Document Owner:** Product Team
+**Reviewers:** Engineering, Design, Business
 **Next Review Date:** TBD

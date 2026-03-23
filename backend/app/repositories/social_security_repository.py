@@ -1,7 +1,6 @@
 """Social Security repository for database operations."""
 
-from uuid import UUID
-
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.models.social_security import SocialSecurity
@@ -18,6 +17,26 @@ class SocialSecurityRepository:
     def get(self) -> SocialSecurity | None:
         """Get Social Security configuration (singleton - only one record)."""
         return self.db.query(SocialSecurity).first()
+
+    def get_via_raw_sql(self) -> dict | None:
+        """Get one row via raw SQL; returns dict with None for missing optional columns."""
+        result = self.db.execute(text("SELECT * FROM social_security LIMIT 1"))
+        row = result.mappings().first()
+        if not row:
+            return None
+        r = dict(row)
+        for key in (
+            "spouse_birth_date",
+            "spouse_fra_monthly_amount",
+            "spouse_fra_age",
+            "spouse_benefit_source",
+            "default_ss_start_age_years",
+            "default_ss_start_age_months",
+            "default_spouse_ss_start_age_years",
+            "default_spouse_ss_start_age_months",
+        ):
+            r.setdefault(key, None)
+        return r
 
     def create(self, ss_data: SocialSecurityCreate) -> SocialSecurity:
         """Create Social Security configuration."""

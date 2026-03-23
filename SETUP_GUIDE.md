@@ -83,6 +83,19 @@ Or use Alembic migrations (to be added in future phases).
 
 ## Troubleshooting
 
+### Frontend shows "Cannot reach the server" / Network Error
+In **development**, the frontend uses a **Vite proxy**: API requests go to the same origin (e.g. `http://localhost:3005/api/v1/...`), and Vite forwards `/api` to the backend. The browser never talks to port 8005 directly, so you shouldn’t see this error when both frontend and backend run via Docker.
+
+1. **Start backend and frontend** (Docker):
+   ```bash
+   docker-compose up -d db backend frontend
+   ```
+   The frontend container uses `VITE_PROXY_TARGET=http://backend:8000` (default) so the proxy reaches the backend.
+
+2. **If you run the frontend locally** (`npm run dev` in `frontend/`), the proxy targets `http://localhost:8005` by default. Ensure the backend is running (e.g. `docker-compose up -d db backend`) and that nothing else is using port 8005.
+
+3. **If you still see Network Error**: Check backend is up (`curl -s http://localhost:8005/health`). If the frontend runs in Docker, ensure `VITE_PROXY_TARGET` is set (e.g. in `.env`: `VITE_PROXY_TARGET=http://backend:8000`), then restart the frontend: `docker-compose up -d --build frontend`.
+
 ### Port Already in Use
 ```bash
 # Check what's using the port

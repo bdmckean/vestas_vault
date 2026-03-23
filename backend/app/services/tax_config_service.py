@@ -1,11 +1,13 @@
 """Service for tax configuration business logic."""
 
+from datetime import date
 from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
 from app.models.tax_config import TaxConfig
 from app.repositories.tax_config_repository import TaxConfigRepository
+from app.repositories.social_security_repository import SocialSecurityRepository
 from app.schemas.tax_config import SeniorDeductionBreakdown, TaxConfigCreate, TaxConfigUpdate
 
 
@@ -34,6 +36,7 @@ class TaxConfigService:
             primary_age=tax_config_data.primary_age,
             spouse_age=tax_config_data.spouse_age,
             annual_income=tax_config_data.annual_income,
+            state=getattr(tax_config_data, "state", None) or "CO",
         )
         return self.repository.create(tax_config)
 
@@ -50,6 +53,7 @@ class TaxConfigService:
             tax_config_data.primary_age,
             tax_config_data.spouse_age,
             tax_config_data.annual_income,
+            getattr(tax_config_data, "state", None),
         )
 
     def delete_tax_config(self):
@@ -59,6 +63,14 @@ class TaxConfigService:
             raise ValueError("Tax configuration not found.")
 
         self.repository.delete(existing)
+
+    def _age_as_of_year_end(self, birth_date: date, tax_year: int) -> int:
+        """Return age as of Dec 31 of tax_year."""
+        ref = date(tax_year, 12, 31)
+        age = ref.year - birth_date.year
+        if (ref.month, ref.day) < (birth_date.month, birth_date.day):
+            age -= 1
+        return age
 
     def calculate_senior_deductions(
         self,
@@ -70,12 +82,29 @@ class TaxConfigService:
     ) -> SeniorDeductionBreakdown:
         """
         Calculate senior deductions based on age and income.
+        If primary_age or spouse_age is not provided, derives them from Social Security birth dates.
 
         For 2026:
         - Base Standard Deduction: Varies by filing status
         - Additional Senior Deduction: $1,650 per person 65+
         - Bonus Senior Deduction: $6,000 per person 65+ if income under $150k
         """
+        # Derive ages from SS birth dates when not provided
+        if primary_age is None or (
+            spouse_age is None and filing_status in ("married_filing_jointly", "qualifying_widow")
+        ):
+            ss_repo = SocialSecurityRepository(self.db)
+            ss = ss_repo.get()
+            if ss and ss.birth_date:
+                if primary_age is None:
+                    primary_age = self._age_as_of_year_end(ss.birth_date, tax_year)
+                if (
+                    spouse_age is None
+                    and filing_status in ("married_filing_jointly", "qualifying_widow")
+                    and getattr(ss, "spouse_birth_date", None)
+                ):
+                    spouse_age = self._age_as_of_year_end(ss.spouse_birth_date, tax_year)
+
         import json
         from pathlib import Path
 

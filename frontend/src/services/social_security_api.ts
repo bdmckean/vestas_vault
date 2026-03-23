@@ -1,18 +1,18 @@
 import axios from 'axios';
+import { API_BASE_URL } from '../config/api';
 import type {
   SocialSecurity,
   SocialSecurityCreate,
-  SocialSecurityPaymentProjection,
+  SocialSecurityProjectionsResponse,
   SocialSecurityUpdate,
 } from '../types/social_security';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8005';
-
 const apiClient = axios.create({
-  baseURL: `${API_URL}/api/v1`,
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 15000, // 15s so we don't hang on "Loading..." if backend is slow or down
 });
 
 export const socialSecurityApi = {
@@ -35,8 +35,10 @@ export const socialSecurityApi = {
     await apiClient.delete('/social-security');
   },
 
-  getProjections: async (): Promise<SocialSecurityPaymentProjection[]> => {
-    const response = await apiClient.get<SocialSecurityPaymentProjection[]>('/social-security/projections');
+  getProjections: async (): Promise<SocialSecurityProjectionsResponse> => {
+    const response = await apiClient.get<SocialSecurityProjectionsResponse>(
+      '/social-security/projections'
+    );
     return response.data;
   },
 };

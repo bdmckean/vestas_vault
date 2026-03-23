@@ -1,10 +1,9 @@
 import axios from 'axios';
+import { API_BASE_URL } from '../config/api';
 import type { Account, AccountCreate, AccountUpdate } from '../types/account';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8005';
-
 const apiClient = axios.create({
-  baseURL: `${API_URL}/api/v1`,
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },

@@ -7,10 +7,10 @@ import type {
   ScenarioComparisonResult,
 } from '../types/saved_scenario';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8005';
+import { API_BASE_URL } from '../config/api';
 
 const apiClient = axios.create({
-  baseURL: `${API_URL}/api/v1`,
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },

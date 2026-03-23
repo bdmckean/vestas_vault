@@ -29,6 +29,10 @@ class TaxConfigBase(BaseModel):
     annual_income: Decimal | None = Field(
         None, ge=0, description="Annual income (for bonus senior deduction eligibility)"
     )
+    state: Literal["CO", "OTHER"] | None = Field(
+        "CO",
+        description="State of residence for state income tax (CO = Colorado; OTHER = flat 4.4% on federal taxable)",
+    )
 
 
 class TaxConfigCreate(TaxConfigBase):
