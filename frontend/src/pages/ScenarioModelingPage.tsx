@@ -70,6 +70,10 @@ export function ScenarioModelingPage() {
   const [comparisonResult, setComparisonResult] = useState<ScenarioComparisonResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [remainingStockTargetKey, setRemainingStockTargetKey] =
+    useState<keyof AssetAllocation>('total_us_stock');
+  /** While editing "% within stocks bucket", keep raw string so typing isn't overwritten by float math */
+  const [stockWithinPctDrafts, setStockWithinPctDrafts] = useState<Record<string, string>>({});
 
   // Fixed expenses
   const {
@@ -171,6 +175,7 @@ export function ScenarioModelingPage() {
   };
 
   const resetForm = () => {
+    setStockWithinPctDrafts({});
     setFormData({
       name: '',
       description: '',
@@ -199,6 +204,7 @@ export function ScenarioModelingPage() {
   };
 
   const handleEdit = (scenario: SavedScenario) => {
+    setStockWithinPctDrafts({});
     setEditingScenario(scenario);
     setFormData({
       name: scenario.name,
@@ -333,6 +339,16 @@ export function ScenarioModelingPage() {
     'reits',
     'other',
   ];
+  const STOCK_ALLOCATION_OPTIONS: { key: keyof AssetAllocation; label: string }[] = [
+    { key: 'total_us_stock', label: 'Total US (VTI)' },
+    { key: 'us_small_cap_value', label: 'Small Cap Value (VBR)' },
+    { key: 'total_foreign_stock', label: 'Total Intl (VXUS)' },
+    { key: 'international_small_cap_value', label: 'Intl Small Cap (VSS)' },
+    { key: 'developed_markets', label: 'Developed (VEA)' },
+    { key: 'emerging_markets', label: 'Emerging (VWO)' },
+    { key: 'reits', label: 'REITs (VNQ)' },
+    { key: 'other', label: 'Other' },
+  ];
 
   // Bucket-derived percentages for display when bucket strategy is on (same formula as computeBucketAllocation).
   const bucketBreakdown = ((): {
@@ -364,6 +380,9 @@ export function ScenarioModelingPage() {
     (s, k) => s + parseFloat(String(formData.asset_allocation[k] || '0')),
     0
   );
+  const stockRemainingPct = bucketBreakdown
+    ? Math.max(0, bucketBreakdown.stockAvailablePct - stockAllocationSum)
+    : 0;
 
   // Compute cash/bond % from bucket years and spending when bucket strategy is on. Returns null if not applicable.
   const computeBucketAllocation = (
@@ -427,24 +446,68 @@ export function ScenarioModelingPage() {
   ]);
 
   const handleAllocationChange = (key: keyof AssetAllocation, value: string) => {
+    // Only update the field being edited. Do not rescale other stock lines on every change —
+    // that caused confusing jumps while typing. When bucket strategy is on, save still
+    // normalizes stock totals via computeBucketAllocation (preserves your mix vs. target %).
     const next = { ...formData.asset_allocation, [key]: value };
-    if (formData.use_bucket_strategy && STOCK_ALLOCATION_KEYS.includes(key)) {
-      const cash = parseFloat(String(formData.asset_allocation.cash || '0'));
-      const bonds = parseFloat(String(formData.asset_allocation.bonds || '0'));
-      const stockTarget = Math.max(0, 100 - cash - bonds);
-      const stockSum = STOCK_ALLOCATION_KEYS.reduce(
-        (s, k) => s + parseFloat(String(next[k] || '0')),
-        0
-      );
-      if (stockSum > 0) {
-        const factor = stockTarget / stockSum;
-        STOCK_ALLOCATION_KEYS.forEach(k => {
-          const v = parseFloat(String(next[k] || '0'));
-          next[k] = String((v * factor).toFixed(2));
-        });
-      }
-    }
     setFormData({ ...formData, asset_allocation: next });
+  };
+
+  const formatWithinStockPctDisplay = (fieldKey: keyof AssetAllocation): string => {
+    if (!bucketBreakdown || bucketBreakdown.stockAvailablePct <= 0) return '0';
+    const abs = parseFloat(String(formData.asset_allocation[fieldKey] || '0'));
+    const w = (abs / bucketBreakdown.stockAvailablePct) * 100;
+    if (!Number.isFinite(w)) return '0';
+    return (Math.round(w * 100) / 100).toString();
+  };
+
+  const commitWithinStockPctDraft = (fieldKey: keyof AssetAllocation) => {
+    if (!bucketBreakdown || bucketBreakdown.stockAvailablePct <= 0) return;
+    const id = fieldKey as string;
+    const raw = (stockWithinPctDrafts[id] ?? formatWithinStockPctDisplay(fieldKey)).trim();
+    setStockWithinPctDrafts(prev => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    if (raw === '' || raw === '-' || raw === '.' || raw === '-.') {
+      handleAllocationChange(fieldKey, '0');
+      return;
+    }
+    const within = parseFloat(raw);
+    if (Number.isNaN(within)) return;
+    const abs = (within / 100) * bucketBreakdown.stockAvailablePct;
+    handleAllocationChange(fieldKey, abs.toFixed(2));
+  };
+
+  useEffect(() => {
+    if (!formData.use_bucket_strategy) setStockWithinPctDrafts({});
+  }, [formData.use_bucket_strategy]);
+
+  useEffect(() => {
+    setStockWithinPctDrafts({});
+  }, [
+    formData.monthly_spending,
+    formData.annual_lump_spending,
+    formData.bucket_1_years,
+    formData.bucket_2_years,
+    formData.bucket_strategy_type,
+    accounts,
+  ]);
+
+  const handleAddRemainingStockAllocation = () => {
+    if (!bucketBreakdown) return;
+    const remaining = Math.max(0, bucketBreakdown.stockAvailablePct - stockAllocationSum);
+    if (remaining <= 0) return;
+    const current = parseFloat(String(formData.asset_allocation[remainingStockTargetKey] || '0'));
+    const updated = current + remaining;
+    setFormData({
+      ...formData,
+      asset_allocation: {
+        ...formData.asset_allocation,
+        [remainingStockTargetKey]: updated.toFixed(2),
+      },
+    });
   };
 
   if (isLoading || ssLoading || accountsLoading) {
@@ -1855,7 +1918,8 @@ export function ScenarioModelingPage() {
                     <p>
                       Cash and bond allocation are set by the strategy (years of spending). Edit
                       only the <strong>stock and REIT</strong> allocations below for the growth
-                      bucket.
+                      bucket. Changing one line does not change the others; save to align the stock
+                      total with “Stocks available” if needed.
                     </p>
                     {bucketBreakdown != null ? (
                       <>
@@ -1878,6 +1942,29 @@ export function ScenarioModelingPage() {
                             ? `(should equal ${bucketBreakdown.stockAvailablePct.toFixed(1)}%)`
                             : ''}
                         </p>
+                        <div className="flex items-center gap-2 pt-1">
+                          <select
+                            value={remainingStockTargetKey}
+                            onChange={e =>
+                              setRemainingStockTargetKey(e.target.value as keyof AssetAllocation)
+                            }
+                            className="px-2 py-1 border border-amber-300 rounded text-xs bg-white"
+                          >
+                            {STOCK_ALLOCATION_OPTIONS.map(opt => (
+                              <option key={opt.key} value={opt.key}>
+                                {opt.label}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            type="button"
+                            onClick={handleAddRemainingStockAllocation}
+                            disabled={stockRemainingPct <= 0.0001}
+                            className="px-2 py-1 rounded text-xs font-medium bg-amber-600 text-white hover:bg-amber-700 disabled:bg-amber-300"
+                          >
+                            Add Remaining ({stockRemainingPct.toFixed(2)}%)
+                          </button>
+                        </div>
                       </>
                     ) : (
                       <p className="text-gray-600">
@@ -1900,39 +1987,44 @@ export function ScenarioModelingPage() {
                         <label className="w-40 text-xs text-gray-700" title={`Expected: ${ret}`}>
                           {label}
                         </label>
-                        <input
-                          type="number"
-                          value={
-                            formData.use_bucket_strategy && bucketBreakdown
-                              ? (parseFloat(
-                                  String(
-                                    formData.asset_allocation[key as keyof AssetAllocation] || '0'
-                                  )
-                                ) /
-                                  (bucketBreakdown.stockAvailablePct > 0
-                                    ? bucketBreakdown.stockAvailablePct
-                                    : 1)) *
-                                100
-                              : formData.asset_allocation[key as keyof AssetAllocation]
-                          }
-                          onChange={e => {
-                            const withinStocksPct = parseFloat(e.target.value || '0');
-                            if (formData.use_bucket_strategy && bucketBreakdown) {
-                              const absPct =
-                                (withinStocksPct / 100) * bucketBreakdown.stockAvailablePct;
-                              handleAllocationChange(
-                                key as keyof AssetAllocation,
-                                absPct.toFixed(2)
-                              );
-                              return;
+                        {formData.use_bucket_strategy && bucketBreakdown ? (
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            autoComplete="off"
+                            value={
+                              stockWithinPctDrafts[key] ??
+                              formatWithinStockPctDisplay(key as keyof AssetAllocation)
                             }
-                            handleAllocationChange(key as keyof AssetAllocation, e.target.value);
-                          }}
-                          className="w-16 px-2 py-1 border border-gray-300 rounded-md text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                          min="0"
-                          max="100"
-                          step="0.01"
-                        />
+                            onFocus={() => {
+                              const k = key as keyof AssetAllocation;
+                              setStockWithinPctDrafts(d => ({
+                                ...d,
+                                [k]: d[k as string] ?? formatWithinStockPctDisplay(k),
+                              }));
+                            }}
+                            onChange={e =>
+                              setStockWithinPctDrafts(d => ({
+                                ...d,
+                                [key]: e.target.value,
+                              }))
+                            }
+                            onBlur={() => commitWithinStockPctDraft(key as keyof AssetAllocation)}
+                            className="w-16 px-2 py-1 border border-gray-300 rounded-md text-sm"
+                          />
+                        ) : (
+                          <input
+                            type="number"
+                            value={formData.asset_allocation[key as keyof AssetAllocation]}
+                            onChange={e =>
+                              handleAllocationChange(key as keyof AssetAllocation, e.target.value)
+                            }
+                            className="w-16 px-2 py-1 border border-gray-300 rounded-md text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            min={0}
+                            max={100}
+                            step={0.01}
+                          />
+                        )}
                         <span className="text-xs text-gray-400">%</span>
                       </div>
                     ))}
@@ -1957,39 +2049,44 @@ export function ScenarioModelingPage() {
                         <label className="w-40 text-xs text-gray-700" title={`Expected: ${ret}`}>
                           {label}
                         </label>
-                        <input
-                          type="number"
-                          value={
-                            formData.use_bucket_strategy && bucketBreakdown
-                              ? (parseFloat(
-                                  String(
-                                    formData.asset_allocation[key as keyof AssetAllocation] || '0'
-                                  )
-                                ) /
-                                  (bucketBreakdown.stockAvailablePct > 0
-                                    ? bucketBreakdown.stockAvailablePct
-                                    : 1)) *
-                                100
-                              : formData.asset_allocation[key as keyof AssetAllocation]
-                          }
-                          onChange={e => {
-                            const withinStocksPct = parseFloat(e.target.value || '0');
-                            if (formData.use_bucket_strategy && bucketBreakdown) {
-                              const absPct =
-                                (withinStocksPct / 100) * bucketBreakdown.stockAvailablePct;
-                              handleAllocationChange(
-                                key as keyof AssetAllocation,
-                                absPct.toFixed(2)
-                              );
-                              return;
+                        {formData.use_bucket_strategy && bucketBreakdown ? (
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            autoComplete="off"
+                            value={
+                              stockWithinPctDrafts[key] ??
+                              formatWithinStockPctDisplay(key as keyof AssetAllocation)
                             }
-                            handleAllocationChange(key as keyof AssetAllocation, e.target.value);
-                          }}
-                          className="w-16 px-2 py-1 border border-gray-300 rounded-md text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                          min="0"
-                          max="100"
-                          step="0.01"
-                        />
+                            onFocus={() => {
+                              const k = key as keyof AssetAllocation;
+                              setStockWithinPctDrafts(d => ({
+                                ...d,
+                                [k]: d[k as string] ?? formatWithinStockPctDisplay(k),
+                              }));
+                            }}
+                            onChange={e =>
+                              setStockWithinPctDrafts(d => ({
+                                ...d,
+                                [key]: e.target.value,
+                              }))
+                            }
+                            onBlur={() => commitWithinStockPctDraft(key as keyof AssetAllocation)}
+                            className="w-16 px-2 py-1 border border-gray-300 rounded-md text-sm"
+                          />
+                        ) : (
+                          <input
+                            type="number"
+                            value={formData.asset_allocation[key as keyof AssetAllocation]}
+                            onChange={e =>
+                              handleAllocationChange(key as keyof AssetAllocation, e.target.value)
+                            }
+                            className="w-16 px-2 py-1 border border-gray-300 rounded-md text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            min={0}
+                            max={100}
+                            step={0.01}
+                          />
+                        )}
                         <span className="text-xs text-gray-400">%</span>
                       </div>
                     ))}
@@ -2006,39 +2103,44 @@ export function ScenarioModelingPage() {
                           <label className="w-40 text-xs text-gray-700" title={`Expected: ${ret}`}>
                             {label}
                           </label>
-                          <input
-                            type="number"
-                            value={
-                              formData.use_bucket_strategy && bucketBreakdown
-                                ? (parseFloat(
-                                    String(
-                                      formData.asset_allocation[key as keyof AssetAllocation] || '0'
-                                    )
-                                  ) /
-                                    (bucketBreakdown.stockAvailablePct > 0
-                                      ? bucketBreakdown.stockAvailablePct
-                                      : 1)) *
-                                  100
-                                : formData.asset_allocation[key as keyof AssetAllocation]
-                            }
-                            onChange={e => {
-                              const withinStocksPct = parseFloat(e.target.value || '0');
-                              if (formData.use_bucket_strategy && bucketBreakdown) {
-                                const absPct =
-                                  (withinStocksPct / 100) * bucketBreakdown.stockAvailablePct;
-                                handleAllocationChange(
-                                  key as keyof AssetAllocation,
-                                  absPct.toFixed(2)
-                                );
-                                return;
+                          {formData.use_bucket_strategy && bucketBreakdown ? (
+                            <input
+                              type="text"
+                              inputMode="decimal"
+                              autoComplete="off"
+                              value={
+                                stockWithinPctDrafts[key] ??
+                                formatWithinStockPctDisplay(key as keyof AssetAllocation)
                               }
-                              handleAllocationChange(key as keyof AssetAllocation, e.target.value);
-                            }}
-                            className="w-16 px-2 py-1 border border-gray-300 rounded-md text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                            min="0"
-                            max="100"
-                            step="0.01"
-                          />
+                              onFocus={() => {
+                                const k = key as keyof AssetAllocation;
+                                setStockWithinPctDrafts(d => ({
+                                  ...d,
+                                  [k]: d[k as string] ?? formatWithinStockPctDisplay(k),
+                                }));
+                              }}
+                              onChange={e =>
+                                setStockWithinPctDrafts(d => ({
+                                  ...d,
+                                  [key]: e.target.value,
+                                }))
+                              }
+                              onBlur={() => commitWithinStockPctDraft(key as keyof AssetAllocation)}
+                              className="w-16 px-2 py-1 border border-gray-300 rounded-md text-sm"
+                            />
+                          ) : (
+                            <input
+                              type="number"
+                              value={formData.asset_allocation[key as keyof AssetAllocation]}
+                              onChange={e =>
+                                handleAllocationChange(key as keyof AssetAllocation, e.target.value)
+                              }
+                              className="w-16 px-2 py-1 border border-gray-300 rounded-md text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              min={0}
+                              max={100}
+                              step={0.01}
+                            />
+                          )}
                           <span className="text-xs text-gray-400">%</span>
                         </div>
                       )

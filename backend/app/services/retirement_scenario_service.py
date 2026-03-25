@@ -738,8 +738,12 @@ class RetirementScenarioService:
                     else stock_returns_by_key
                 )
 
+                allocation_data = scenario_schema.asset_allocation
+                if not isinstance(allocation_data, dict) and hasattr(allocation_data, "model_dump"):
+                    allocation_data = allocation_data.model_dump()
+
                 stock_total_pct = Decimal("0")
-                for k, v in scenario_schema.asset_allocation.items():
+                for k, v in allocation_data.items():
                     if k in returns_map:
                         stock_total_pct += Decimal(str(v))
 
@@ -747,8 +751,8 @@ class RetirementScenarioService:
                 if stock_total_pct > 0:
                     stock_blended_return = Decimal("0")
                     for k, expected in returns_map.items():
-                        if k in scenario_schema.asset_allocation:
-                            pct = Decimal(str(scenario_schema.asset_allocation.get(k) or "0"))
+                        if k in allocation_data:
+                            pct = Decimal(str(allocation_data.get(k) or "0"))
                             stock_blended_return += (pct / stock_total_pct) * expected
                 else:
                     stock_blended_return = base_return
