@@ -95,6 +95,9 @@ class ScenarioRepository:
             spouse_ss_start_age_months=getattr(original, "spouse_ss_start_age_months", None),
             monthly_spending=original.monthly_spending,
             annual_lump_spending=original.annual_lump_spending,
+            additional_other_income_annual=getattr(
+                original, "additional_other_income_annual", Decimal("0")
+            ),
             inflation_adjusted_percent=original.inflation_adjusted_percent,
             spending_reduction_percent=original.spending_reduction_percent,
             spending_reduction_start_year=original.spending_reduction_start_year,

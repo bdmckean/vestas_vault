@@ -7,6 +7,7 @@ from app.api.v1 import (
     asset_projections,
     fixed_expenses,
     holdings,
+    monte_carlo,
     other_income,
     planned_fixed_expenses,
     planned_spending,
@@ -23,6 +24,7 @@ api_router.include_router(accounts.router)
 api_router.include_router(holdings.router)
 api_router.include_router(social_security.router)
 api_router.include_router(asset_projections.router)
+api_router.include_router(monte_carlo.router)
 api_router.include_router(scenarios.router)
 api_router.include_router(saved_scenarios.router)
 api_router.include_router(fixed_expenses.router)

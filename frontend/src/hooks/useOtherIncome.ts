@@ -17,6 +17,8 @@ export function useCreateOtherIncome() {
   return useMutation(otherIncomeApi.createIncome, {
     onSuccess: () => {
       queryClient.invalidateQueries('other-income');
+      queryClient.invalidateQueries('scenario-projection');
+      queryClient.invalidateQueries('monte-carlo-run');
     },
   });
 }
@@ -29,6 +31,8 @@ export function useUpdateOtherIncome() {
     {
       onSuccess: () => {
         queryClient.invalidateQueries('other-income');
+        queryClient.invalidateQueries('scenario-projection');
+        queryClient.invalidateQueries('monte-carlo-run');
       },
     }
   );
@@ -39,6 +43,8 @@ export function useDeleteOtherIncome() {
   return useMutation(otherIncomeApi.deleteIncome, {
     onSuccess: () => {
       queryClient.invalidateQueries('other-income');
+      queryClient.invalidateQueries('scenario-projection');
+      queryClient.invalidateQueries('monte-carlo-run');
     },
   });
 }

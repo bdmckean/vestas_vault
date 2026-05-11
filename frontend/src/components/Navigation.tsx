@@ -4,7 +4,9 @@ export function Navigation() {
   const location = useLocation();
 
   const isActive = (path: string) => {
-    return location.pathname === path ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100';
+    return location.pathname === path
+      ? 'bg-blue-100 text-blue-700'
+      : 'text-gray-700 hover:bg-gray-100';
   };
 
   return (
@@ -16,10 +18,7 @@ export function Navigation() {
               Retirement Planner
             </Link>
             <div className="flex space-x-4">
-              <Link
-                to="/"
-                className={`px-3 py-2 rounded-md text-sm font-medium ${isActive('/')}`}
-              >
+              <Link to="/" className={`px-3 py-2 rounded-md text-sm font-medium ${isActive('/')}`}>
                 Dashboard
               </Link>
               <Link
@@ -36,7 +35,9 @@ export function Navigation() {
               </Link>
               <Link
                 to="/social-security"
-                className={`px-3 py-2 rounded-md text-sm font-medium ${isActive('/social-security')}`}
+                className={`px-3 py-2 rounded-md text-sm font-medium ${isActive(
+                  '/social-security'
+                )}`}
               >
                 SS
               </Link>
@@ -48,7 +49,9 @@ export function Navigation() {
               </Link>
               <Link
                 to="/planned-spending"
-                className={`px-3 py-2 rounded-md text-sm font-medium ${isActive('/planned-spending')}`}
+                className={`px-3 py-2 rounded-md text-sm font-medium ${isActive(
+                  '/planned-spending'
+                )}`}
               >
                 Spending
               </Link>
@@ -60,15 +63,33 @@ export function Navigation() {
               </Link>
               <Link
                 to="/asset-projections"
-                className={`px-3 py-2 rounded-md text-sm font-medium ${isActive('/asset-projections')}`}
+                className={`px-3 py-2 rounded-md text-sm font-medium ${isActive(
+                  '/asset-projections'
+                )}`}
               >
                 Projections
               </Link>
               <Link
                 to="/scenario-modeling"
-                className={`px-3 py-2 rounded-md text-sm font-medium ${isActive('/scenario-modeling')}`}
+                className={`px-3 py-2 rounded-md text-sm font-medium ${isActive(
+                  '/scenario-modeling'
+                )}`}
               >
                 Scenarios
+              </Link>
+              <Link
+                to="/visualizations"
+                className={`px-3 py-2 rounded-md text-sm font-medium ${isActive(
+                  '/visualizations'
+                )}`}
+              >
+                Visuals
+              </Link>
+              <Link
+                to="/monte-carlo"
+                className={`px-3 py-2 rounded-md text-sm font-medium ${isActive('/monte-carlo')}`}
+              >
+                Monte Carlo
               </Link>
             </div>
           </div>

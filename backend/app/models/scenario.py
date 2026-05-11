@@ -41,6 +41,12 @@ class SavedScenario(Base):
     annual_lump_spending = Column(
         Numeric(12, 2), nullable=False, default=Decimal("0"), comment="Annual lump sum spending"
     )
+    additional_other_income_annual = Column(
+        Numeric(12, 2),
+        nullable=False,
+        default=Decimal("0"),
+        comment="Scenario-specific annual income added to global Other Income",
+    )
     inflation_adjusted_percent = Column(
         Numeric(5, 2),
         nullable=False,

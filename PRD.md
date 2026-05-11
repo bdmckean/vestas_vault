@@ -1,8 +1,8 @@
 # Product Requirements Document (PRD)
 ## Retirement Planning Application - Vestas Vault
 
-**Version:** 1.1
-**Last Updated:** February 23, 2026
+**Version:** 1.2
+**Last Updated:** April 11, 2026
 **Status:** Draft
 
 ---
@@ -18,16 +18,17 @@
 7. [Non-Functional Requirements](#non-functional-requirements)
 8. [Out of Scope](#out-of-scope)
 9. [Future Considerations](#future-considerations)
+10. [Strategic Direction: Future Planners, SaaS & Deployment](#strategic-direction-future-planners-saas--deployment)
 
 ---
 
 ## Executive Summary
 
 ### Product Vision
-A comprehensive retirement planning application that helps users optimize their retirement strategy by modeling different scenarios, analyzing Social Security timing, managing account types, and projecting long-term financial outcomes.
+A comprehensive retirement planning application that helps **current and future retirees** optimize their strategy by modeling scenarios, analyzing Social Security timing, managing account types, and projecting long-term outcomes—including **years or decades before retirement** when allocation and contributions change over time.
 
 ### Product Mission
-Enable users to make informed retirement decisions by providing accurate, personalized projections that account for Social Security timing, tax implications, account types, spending patterns, and investment strategies.
+Enable users to make informed retirement decisions by providing accurate, personalized projections that account for Social Security timing, tax implications, account types, spending patterns, and investment strategies—whether they are **already retired** or **planning toward a future retirement date**.
 
 ### Key Value Propositions
 - **Accurate Projections**: Model retirement scenarios 30+ years into the future
@@ -36,6 +37,49 @@ Enable users to make informed retirement decisions by providing accurate, person
 - **Account Type Management**: Track and optimize pretax, Roth, taxable, and cash accounts
 - **Scenario Comparison**: Compare multiple retirement strategies side-by-side
 - **Visual Insights**: See trends over time through graphs and charts
+- **Phased allocation**: Model different asset mixes over defined calendar or plan-year ranges (see [Strategic Direction](#strategic-direction-future-planners-saas--deployment))
+- **SaaS readiness**: Authenticated users, account management, and optional paid access (see same section)
+
+---
+
+## Strategic Direction: Future Planners, SaaS & Deployment
+
+This section captures **product direction** agreed for 2026: the app should serve people **planning retirement in the future**, not only those already in the withdrawal phase; the product should be **commercializable** (sign-in, user lifecycle, payments); and **deployment** will align with a **separate hosting platform** under development.
+
+### Future retirement planning (pre-retirement)
+- Treat **accumulation and glide-path years** as first-class, alongside today’s withdrawal-focused flows.
+- Users should be able to set a **retirement start** (or plan anchor) and see projections that include years **before** that date (savings, growth, changing assumptions) and **after** (spending, taxes, withdrawals).
+- Requirements that today live under “secondary” accumulation planning should be **prioritized and specified** for implementation order—not deferred indefinitely.
+
+### Time-period asset allocation
+- Users must be able to define **one or more allocation schedules** per scenario (or per plan), each with:
+  - **Effective range**: calendar years and/or plan years (e.g. ages 35–49, 50–59, 60–retirement).
+  - **Allocation**: same asset-class keys as today’s scenario allocation, summing to 100% within each band.
+  - **Behavior at boundaries**: step change on band boundary (MVP); optional smooth glide (future).
+- Projection and Monte Carlo engines must apply the **allocation in force for that year** when computing returns (and volatility where used).
+- UX: timeline or table editor, validation (no gaps/overlaps or explicit overlap rules), preview of effective mix by year.
+
+### User identity and account management
+- **Authentication**: sign-up, sign-in, sign-out, password reset (or delegated identity provider); secure session handling.
+- **User profile**: minimal PII; preference for email as identifier; regional/tax jurisdiction where relevant.
+- **Data tenancy**: each user’s scenarios, accounts, and configuration are **isolated** to that user (no cross-user reads).
+- **Administration (phase 2+)**: optional internal tools for support (read-only user lookup, subscription status)—scope TBD.
+
+### Monetization (charging for use)
+- **Business model TBD** (examples: flat subscription, tiered plans, trial + paywall, usage-based limits on simulations).
+- **Requirements**:
+  - Integrate a **payment provider** (e.g. Stripe or equivalent) for checkout, invoices, and webhooks.
+  - Map **subscription or entitlement state** to product features (e.g. max scenarios, Monte Carlo runs, export).
+  - **Grace period / failed payment** handling and read-only or degraded access policy (product decision).
+  - Clear **billing page** and cancellation flow; compliance with tax receipts where applicable.
+- **Privacy**: payment data handled only by the provider; app stores tokens/ids, not full card numbers.
+
+### Deployment and hosting
+- **Short term**: continue current deployment model (e.g. Docker) for development and demos.
+- **Long term**: deployment target is **TBD** and will follow a **separately developed organization-wide platform for hosting applications**. This product should:
+  - Keep **12-factor** style configuration (env-based secrets, stateless app, external database).
+  - Avoid hard-coding a single vendor; document **interfaces** (health checks, migrations, background jobs) the hosting platform must support.
+- **Until the hosting platform exists**: no commitment to a specific cloud or PaaS in this PRD; revisit when the platform’s contract is defined.
 
 ---
 
@@ -127,10 +171,10 @@ A web-based application that:
 
 ---
 
-### Secondary Persona: Pre-Retiree Accumulator (Age 30-50)
+### Co-Primary Persona: Future Planner / Accumulator (Age 30–55)
 **Name:** Jessica
 **Age:** 35
-**Situation:** Early in career, actively saving for retirement, 30+ years until retirement
+**Situation:** Mid-career, **retirement is 20–30+ years away**; actively saving; expects **allocation and contribution rates to change** by life stage and calendar period.
 
 **Goals:**
 - Project retirement savings growth over 30+ years
@@ -148,12 +192,11 @@ A web-based application that:
 
 **Tech Comfort:** Moderate - comfortable with web applications, prefers clear visualizations
 
-**Key Differences from Retirees:**
-- Focus on **accumulation** (contributions) vs **withdrawal** (spending)
-- Longer time horizon (30+ years vs 30 years)
-- Need to model **portfolio evolution** over time (different allocations at different ages)
-- Contributions may vary by life stage
-- May have multiple goals (retirement, house, kids' education)
+**Key Differences from Near-Retirees / Retirees:**
+- Focus on **accumulation** (contributions) and **glide path** vs **withdrawal** (decumulation)
+- Longer time horizon; must support **plan-years before retirement** as clearly as years after
+- **Time-segmented asset allocation** is a core expectation (see [Strategic Direction](#strategic-direction-future-planners-saas--deployment))
+- Contributions may vary by life stage; may have multiple goals (retirement, housing, education)
 
 ---
 
@@ -263,6 +306,8 @@ A web-based application that:
 - **US-4.4**: As a user, I want to specify loan expenses that are a fixed amount and have a fixed duration
 - **US-4.5**: As a user, I want to reduce spending after a certain year so I can model "go-go, slow-go, no-go" phases
 - **US-4.6**: As a user, I want to see my total loan and other spending counted as total mothly spending
+- **US-4.7**: As a user, I want to model medical expenses separately from general spending so I can plan healthcare costs more accurately
+- **US-4.8**: As a user, I want a separate medical inflation assumption so healthcare costs can grow differently than CPI
 
 
 **Acceptance Criteria:**
@@ -271,6 +316,8 @@ A web-based application that:
 - Fixed expenses are tracked separately
 - Spending reductions can be scheduled
 - Total spending is calculated correctly
+- Medical expenses can be modeled as a separate category
+- Medical inflation rate can be configured separately from general inflation
 
 **Status:** ✅ Implemented
 
@@ -370,13 +417,13 @@ A web-based application that:
 
 ---
 
-### Epic 9: Accumulation Phase Planning (Secondary)
-**As a** pre-retiree accumulator
-**I want to** model my retirement savings growth over time
-**So that** I can plan how much to save and when to retire
+### Epic 9: Accumulation Phase & Future Retirement Planning
+**As a** user planning retirement in the future
+**I want to** model savings growth, changing contributions, and **asset allocation by time period**
+**So that** I can plan how much to save, when to retire, and how risk should evolve before retirement
 
 #### User Stories
-- **US-9.1**: As a user in my 30s, I want to set different portfolio allocations at different ages so I can model aggressive early, conservative later
+- **US-9.1**: As a user, I want to set **different portfolio allocations for specific calendar or plan-year ranges** so I can model aggressive early, conservative later (and any staged glide path)
 - **US-9.2**: As a user, I want to set monthly/annual contributions so I can see how savings grow
 - **US-9.3**: As a user, I want to change contribution amounts at different life stages so I can model kids, house, etc.
 - **US-9.4**: As a user, I want to see when I'll reach my retirement goal so I can plan retirement age
@@ -391,7 +438,7 @@ A web-based application that:
 - Can transition to withdrawal phase at retirement age
 - Portfolio allocations can change over time
 
-**Status:** ❌ Not Implemented (Secondary Requirement)
+**Status:** ❌ Not Implemented — **Priority raised**: required for “future planner” positioning (see [Strategic Direction](#strategic-direction-future-planners-saas--deployment)); sequencing vs Epic 17 to be set in roadmap.
 
 ---
 
@@ -555,14 +602,36 @@ A web-based application that:
 
 ---
 
+### Epic 17: Identity, Subscriptions & Billing (SaaS)
+**As a** product operator
+**I want** authenticated users and a way to charge for access
+**So that** the application can be offered as a sustainable commercial service
+
+#### User Stories
+- **US-17.1**: As a new user, I want to create an account and sign in so my data is private to me.
+- **US-17.2**: As a user, I want to reset my password (or use SSO) so I can recover access securely.
+- **US-17.3**: As a user, I want to subscribe or purchase a plan so I can use premium features within clear limits.
+- **US-17.4**: As a user, I want to manage billing (payment method, invoices, cancel) so I stay in control of charges.
+- **US-17.5**: As a user, I want entitlements enforced transparently (e.g. which features require paid tier) so expectations are clear.
+
+**Acceptance Criteria:**
+- All scenario, account, and projection data are scoped to the authenticated user.
+- Sessions are secure; credentials are never stored in plain text.
+- Payment integration supports subscription lifecycle (active, past_due, canceled) via provider webhooks.
+- Feature flags or limits derived from subscription state are documented and testable.
+
+**Status:** ❌ Not Implemented
+
+---
+
 ## Feature Specifications
 
-### Feature: Accumulation Phase Planning (Secondary)
-**Priority:** 🟢 Medium (Secondary Requirement)
+### Feature: Accumulation Phase Planning
+**Priority:** 🟡 High (core to “future planner” positioning; pairs with [Time-Period Asset Allocation](#feature-time-period-asset-allocation-cross-phase))
 **Status:** ❌ Not Implemented
 
 **Description:**
-Support retirement planning for users in accumulation phase (30s-50s) who are saving for retirement, with ability to model different portfolios and contributions over time.
+Support retirement planning for users **before and through** retirement: accumulation, changing contributions, and (with time-period allocation) evolving portfolio mix—then transition into withdrawal modeling.
 
 **Requirements:**
 
@@ -663,7 +732,7 @@ Support retirement planning for users in accumulation phase (30s-50s) who are sa
 - Link accumulation phase to withdrawal phase scenarios
 - Calculate required contributions to reach goals
 
-**Priority Note:** This is a secondary requirement. Core application focuses on withdrawal phase (retirement). Accumulation phase features can be added after core features are complete.
+**Priority note:** Sequencing vs **authentication / billing (Epic 17)** is a roadmap decision; time-period allocation should land early because withdrawal-only users also benefit (e.g. post-retirement glide).
 
 ---
 
@@ -1484,6 +1553,131 @@ Run probabilistic simulations (Monte Carlo) to produce a distribution of portfol
 
 ---
 
+### Feature: Medical Expenses & Medical Inflation
+**Priority:** 🟡 High
+**Status:** ❌ Not Implemented
+
+**Description:**
+Support a dedicated medical-expense model with an independent medical inflation rate, so users can project healthcare costs separately from baseline spending.
+
+**Requirements:**
+- **Medical Expense Categories:**
+  - Baseline recurring medical expense (monthly or annual)
+  - Optional one-time/episodic medical events (year-based)
+  - Optional spouse/household medical expense support
+- **Medical Inflation:**
+  - Separate medical inflation rate (e.g., 4-7%) distinct from general CPI
+  - Medical inflation applied only to medical expense components
+  - Ability to set defaults and override per scenario
+- **Projection Integration:**
+  - Medical expenses included in annual spending and withdrawal needs
+  - Medical expense and non-medical expense shown separately in outputs/charts
+
+**User Value:**
+- Better healthcare planning accuracy
+- More realistic retirement spending projections
+- Better stress testing for late-retirement cost growth
+
+**Acceptance Criteria:**
+- User can enter recurring and one-time medical expenses
+- User can set a separate medical inflation rate
+- Medical costs inflate independently from non-medical spending
+- Projections and visuals show medical vs non-medical spending components
+
+---
+
+### Feature: Real Estate Portfolio (Primary + Rental)
+**Priority:** 🟡 High
+**Status:** ❌ Not Implemented
+
+**Description:**
+Track real-estate holdings as portfolio components, including owner-occupied residence and rental properties, with cash-flow and valuation treatment in projections.
+
+**Requirements:**
+- **Property Types:**
+  - Primary residence (lived in)
+  - Rental property (one or more)
+- **Data Model:**
+  - Current value, debt/mortgage balance, interest rate, payment, taxes/insurance/HOA
+  - Appreciation assumption by property type
+  - Rental income, vacancy/maintenance assumptions, net cash flow
+- **Projection Behavior:**
+  - Primary residence can be excluded from liquid withdrawal pool by default
+  - Rental net income included in other-income stream
+  - Property value/equity tracked over time
+  - Optional sale events and downsizing scenarios (future extension)
+- **Reporting:**
+  - Show liquid portfolio vs total net worth including real estate
+  - Show property-level and aggregate real-estate contributions to plan outcomes
+
+**User Value:**
+- Reflects real household balance sheet
+- Improves income and net-worth realism for real-estate owners
+- Better planning for housing and rental cash-flow decisions
+
+**Acceptance Criteria:**
+- User can add/edit/delete primary and rental properties
+- Rental cash flow is incorporated into annual projection income
+- Property values/equity are projected and displayed separately
+- Scenario output distinguishes liquid portfolio from real-estate value
+
+---
+
+### Feature: Time-Period Asset Allocation (Cross-Phase)
+**Priority:** 🔴 High (enables future planners; supports Epic 9)
+**Status:** ❌ Not Implemented
+
+**Description:**
+Let users define **multiple asset-allocation bands over time** within a scenario (or linked plan), instead of a single static allocation for all projection years. Applies to **accumulation and withdrawal** years wherever returns are driven by allocation.
+
+**Requirements:**
+- **Band model:** Ordered list of `{ start_year, end_year, allocation }` using existing asset-class keys; each allocation sums to 100%.
+- **Resolution:** For each projection year, select the band whose range contains that year; if none, fall back to scenario default or show validation error.
+- **Overlap / gaps:** MVP either forbids overlaps and requires full coverage, or allows gaps with explicit default-allocation fallback (product choice—document in implementation).
+- **Engine:** `RetirementScenarioService` (and Monte Carlo / stress paths that read scenario returns) use **year-specific weights** when blending returns.
+- **UX:** Table or timeline editor; copy band; reorder; validate sums.
+
+**Acceptance Criteria:**
+Changing a later band only affects years in that range; year-by-year effective allocation is visible in exports or a summary row.
+
+---
+
+### Feature: User Authentication & Account Management
+**Priority:** 🔴 High (prerequisite for SaaS and billing)
+**Status:** ❌ Not Implemented
+
+**Description:**
+Register, authenticate, and isolate data per user.
+
+**Requirements:**
+- Email/password or OIDC (e.g. Auth0, Cognito, Clerk)—**provider TBD**.
+- JWT or cookie session; HTTPS-only in production.
+- Password hashing (bcrypt/argon2) if local passwords; rate limiting on auth endpoints.
+- **Multi-tenancy:** `user_id` on all user-owned rows; API enforces ownership on every mutation/read.
+
+**Acceptance Criteria:**
+Two users cannot read or modify each other’s scenarios; logout invalidates session.
+
+---
+
+### Feature: Subscriptions & Payments
+**Priority:** 🟡 High (commercialization)
+**Status:** ❌ Not Implemented
+
+**Description:**
+Charge users for access via a third-party payment provider; map subscription state to entitlements.
+
+**Requirements:**
+- Checkout, customer portal (or equivalent), webhooks for `customer.subscription.*` events.
+- Store minimal billing state: customer id, subscription id, plan tier, status, current period end.
+- **Entitlements:** e.g. free tier caps vs paid unlimited (exact limits **TBD** by business).
+- **Compliance:** Terms, privacy policy links; no card data in application DB.
+
+**Acceptance Criteria:**
+User who cancels retains access until period end (or policy defined); failed payment moves account to a defined state without silent data loss.
+
+---
+
 ## Non-Functional Requirements
 
 ### Performance
@@ -1493,7 +1687,8 @@ Run probabilistic simulations (Monte Carlo) to produce a distribution of portfol
 - **API Response Time**: < 500ms for standard endpoints
 
 ### Security
-- **Data Privacy**: All data stored locally (no cloud sync required)
+- **Data privacy & tenancy**: With authentication, all persisted user data is **scoped to the owning account**; no cross-tenant leakage. (Self-hosted or single-user deployments may still exist for development; production assumes **identified users** per [Strategic Direction](#strategic-direction-future-planners-saas--deployment).)
+- **Secrets**: API keys, DB URLs, and payment webhooks live in environment/config—not in source control.
 - **Input Validation**: All inputs validated on frontend and backend
 - **SQL Injection Prevention**: Use parameterized queries
 - **XSS Prevention**: Sanitize all user inputs
@@ -1521,19 +1716,14 @@ Run probabilistic simulations (Monte Carlo) to produce a distribution of portfol
 
 ### Explicitly Excluded
 - **Real-time Market Data**: Uses static projections
-- **Multi-user Collaboration**: Single-user application
+- **Multi-user collaboration** (shared workspaces, advisor–client joint editing): out of scope; **multi-tenant individual accounts** are in scope per Epic 17.
 - **Mobile App**: Web application only
 - **Financial Advice**: Tool for planning, not advice
 - **Account Aggregation**: Manual entry only
 - **Bill Pay**: Not a banking application
 
 ### Secondary Requirements (Lower Priority)
-- **Accumulation Phase Planning**: Features for users saving for retirement (30s-50s)
-  - Different portfolios at different times
-  - Contributions during accumulation phase
-  - Long-term growth projections (30+ years)
-  - Retirement goal tracking
-  - **Note**: Core application focuses on withdrawal phase. Accumulation features can be added after core features are complete.
+- **Accumulation-only extras** (e.g. employer match modeling, education savings buckets): may follow **time-period allocation** and **pre-retirement projection years**; see [Strategic Direction](#strategic-direction-future-planners-saas--deployment) for reprioritization.
 
 ---
 
@@ -1545,16 +1735,11 @@ Run probabilistic simulations (Monte Carlo) to produce a distribution of portfol
 - Advanced tax strategies
 - Estate planning features
 - Historical stress testing (using actual year-by-year returns)
+- Medical expenses with separate medical inflation
+- Real-estate portfolio modeling (primary + rental)
 
 ### Phase 3 Features (Secondary Requirements)
-- **Accumulation Phase Planning:**
-  - Different portfolios at different times (age-based allocation changes)
-  - Contributions during accumulation phase (monthly/annual)
-  - Contribution changes over time (life stage modeling)
-  - Long-term growth projections (30+ years)
-  - Retirement goal tracking
-  - Transition from accumulation to withdrawal phase
-  - **Priority**: Lower - focus on withdrawal phase first
+- **Accumulation phase depth** (contributions, life-stage contribution changes, goal tracking, transition UX): builds on **time-period allocation** and **Epic 9**; priority relative to Epic 17 set in roadmap—not “withdrawal-only first” by default anymore.
 
 - **Guardrails & Monitoring:**
   - Portfolio balance thresholds
@@ -1594,6 +1779,8 @@ Run probabilistic simulations (Monte Carlo) to produce a distribution of portfol
 - `SETUP_GUIDE.md` - Developer setup instructions
 
 ### Change Log
+- **2026-04-11** (v1.2): Added **Strategic Direction** (future planners, time-period asset allocation, auth, billing, deployment TBD / hosting platform). Added **Epic 17** (identity, subscriptions, billing) and feature specs for **time-period allocation**, **authentication**, and **payments**. Elevated **Jessica** to co-primary persona; retitled and reprioritized **Epic 9**; updated NFR security/tenancy, out-of-scope wording, and Phase 3 notes.
+- **2026-03-26**: Added spending enhancements for medical expenses with separate medical inflation (new user stories US-4.7/US-4.8 and feature spec). Added real-estate portfolio scope for primary residence and rental properties with projection and reporting requirements.
 - **2026-02-23**: Monte Carlo simulations moved into current scope: removed from Out of Scope and Phase 2; Epic 11 expanded to "Stress Testing & Monte Carlo" with new user stories (US-11.7–US-11.11) and acceptance criteria; added Feature Specification "Monte Carlo Simulations" with requirements, outputs, and technical considerations.
 - **2026-02-23**: Updated implementation status: Account Type Segregation and Withdrawal Sequencing set to Implemented; Partner/Spouse Social Security set to Partial (dual/spousal implemented; survivor benefits not yet); Bucket Strategy updated (Strategy A and B implemented, scenario builder locking remaining); Epic 2 acceptance criteria updated for COLA from current date to start; version 1.1.
 - **2026-02-05**: Initial PRD created

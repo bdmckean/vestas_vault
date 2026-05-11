@@ -428,8 +428,9 @@ class RetirementScenarioService:
 
         # Default tax parameters if not configured
         filing_status = tax_config.filing_status if tax_config else "married_filing_jointly"
+        # Planning default: $32k (2026-style total deduction); indexed per projection year below.
         total_deductions = (
-            Decimal(str(tax_config.total_deductions)) if tax_config else Decimal("30000")
+            Decimal(str(tax_config.total_deductions)) if tax_config else Decimal("32000")
         )
         state_of_residence = getattr(tax_config, "state", None) or "CO" if tax_config else "CO"
 
@@ -485,6 +486,9 @@ class RetirementScenarioService:
 
         calendar_year = today.year
         base_monthly_spending = scenario_schema.monthly_spending
+        scenario_additional_income_annual = Decimal(
+            str(getattr(scenario_schema, "additional_other_income_annual", Decimal("0")))
+        )
 
         # Initialize bucket strategy if enabled
         use_bucket_strategy = getattr(scenario_schema, "use_bucket_strategy", False)
@@ -549,6 +553,14 @@ class RetirementScenarioService:
             bucket_3_previous_high = bucket_balances["bucket_3"]
 
         for year_num in range(1, scenario_schema.projection_years + 1):
+            # Match variable spending: year 1 = base dollars; compound each subsequent year.
+            tax_index_factor = (Decimal("1") + scenario_schema.inflation_rate / Decimal("100")) ** (
+                year_num - 1
+            )
+            indexed_total_deductions = (total_deductions * tax_index_factor).quantize(
+                Decimal("0.01")
+            )
+
             age = current_age + year_num - 1
             spouse_age_this_year = (
                 (spouse_current_age + year_num - 1) if spouse_current_age is not None else None
@@ -627,6 +639,7 @@ class RetirementScenarioService:
 
             # Get other income for this year
             other_income = self._calculate_other_income(other_income_service, calendar_year)
+            other_income += scenario_additional_income_annual
 
             # Calculate fixed expenses active this year (not subject to inflation)
             # Fixed expenses are ADDITIONAL to the base monthly spending
@@ -954,9 +967,12 @@ class RetirementScenarioService:
             # Initial tax estimation (assuming pretax withdrawals, which matches our sequencing strategy)
             # We'll recalculate after withdrawals to be more accurate
             # Taxable income = SS (85% taxable at high income) + pretax withdrawals - deductions
+            ss_provisional_threshold = (Decimal("44000") * tax_index_factor).quantize(
+                Decimal("0.01")
+            )
             ss_taxable_pct = (
                 Decimal("0.85")
-                if (ss_income + gross_needed) > Decimal("44000")
+                if (ss_income + gross_needed) > ss_provisional_threshold
                 else Decimal("0.50")
             )
             taxable_ss = ss_income * ss_taxable_pct
@@ -964,11 +980,13 @@ class RetirementScenarioService:
             # Estimate taxes assuming pretax withdrawals (matches withdrawal sequencing)
             estimated_taxable_withdrawal = max(Decimal("0"), gross_needed)
             gross_taxable_income = taxable_ss + estimated_taxable_withdrawal + other_income
-            estimated_taxable_income = max(Decimal("0"), gross_taxable_income - total_deductions)
+            estimated_taxable_income = max(
+                Decimal("0"), gross_taxable_income - indexed_total_deductions
+            )
 
             # Calculate estimated federal tax
             estimated_federal_tax = self._calculate_federal_tax(
-                estimated_taxable_income, filing_status
+                estimated_taxable_income, filing_status, tax_index_factor
             )
 
             # State tax (CO: 4.4%, SS fully excluded for 65+; OTHER: 4.4% on federal taxable)
@@ -1124,11 +1142,13 @@ class RetirementScenarioService:
                 # Recalculate taxable income with actual withdrawals
                 actual_gross_taxable_income = taxable_ss + taxable_withdrawal_amount + other_income
                 actual_taxable_income = max(
-                    Decimal("0"), actual_gross_taxable_income - total_deductions
+                    Decimal("0"), actual_gross_taxable_income - indexed_total_deductions
                 )
 
                 # Recalculate taxes
-                federal_tax = self._calculate_federal_tax(actual_taxable_income, filing_status)
+                federal_tax = self._calculate_federal_tax(
+                    actual_taxable_income, filing_status, tax_index_factor
+                )
                 state_tax = self._calculate_state_tax(
                     actual_taxable_income,
                     primary_ss_income,
@@ -1164,9 +1184,11 @@ class RetirementScenarioService:
                 # No withdrawals - taxes based on SS and other income only
                 actual_gross_taxable_income = taxable_ss + other_income
                 actual_taxable_income = max(
-                    Decimal("0"), actual_gross_taxable_income - total_deductions
+                    Decimal("0"), actual_gross_taxable_income - indexed_total_deductions
                 )
-                federal_tax = self._calculate_federal_tax(actual_taxable_income, filing_status)
+                federal_tax = self._calculate_federal_tax(
+                    actual_taxable_income, filing_status, tax_index_factor
+                )
                 state_tax = self._calculate_state_tax(
                     actual_taxable_income,
                     primary_ss_income,
@@ -1369,9 +1391,11 @@ class RetirementScenarioService:
                         taxable_ss + updated_taxable_withdrawal_amount + other_income
                     )
                     updated_taxable_income = max(
-                        Decimal("0"), updated_gross_taxable_income - total_deductions
+                        Decimal("0"), updated_gross_taxable_income - indexed_total_deductions
                     )
-                    federal_tax = self._calculate_federal_tax(updated_taxable_income, filing_status)
+                    federal_tax = self._calculate_federal_tax(
+                        updated_taxable_income, filing_status, tax_index_factor
+                    )
                     state_tax = self._calculate_state_tax(
                         updated_taxable_income,
                         primary_ss_income,
@@ -1545,6 +1569,17 @@ class RetirementScenarioService:
             comparison_summary=summary,
         )
 
+    def _asset_allocation_as_dict(self, scenario) -> dict:
+        """Return asset allocation as a plain dict (Pydantic models are common from DB/API)."""
+        if not hasattr(scenario, "asset_allocation") or scenario.asset_allocation is None:
+            return {}
+        allocation = scenario.asset_allocation
+        if isinstance(allocation, dict):
+            return allocation
+        if hasattr(allocation, "model_dump"):
+            return allocation.model_dump()
+        return {}
+
     def _get_annual_return(self, scenario, year_num: int | None = None) -> Decimal:
         """
         Get annual return based on scenario configuration and year number.
@@ -1581,79 +1616,83 @@ class RetirementScenarioService:
                 return self._get_10_year_blended_return(scenario)
 
     def _get_10_year_blended_return(self, scenario) -> Decimal:
-        """Calculate blended return using 10-year institutional projections."""
-        if hasattr(scenario, "asset_allocation"):
-            allocation = scenario.asset_allocation
-            if isinstance(allocation, dict):
-                # 10-year expected returns by asset class (Vanguard ETFs)
-                returns = {
-                    # US Equities
-                    "total_us_stock": Decimal("7.5"),  # VTI
-                    "us_small_cap_value": Decimal("8.5"),  # VBR
-                    # International Equities
-                    "total_foreign_stock": Decimal("7.0"),  # VXUS
-                    "international_small_cap_value": Decimal("8.0"),  # VSS
-                    "developed_markets": Decimal("6.5"),  # VEA
-                    "emerging_markets": Decimal("8.0"),  # VWO
-                    # Real Estate
-                    "reits": Decimal("9.5"),  # VNQ - 10-year forecast
-                    # Fixed Income
-                    "bonds": Decimal("4.5"),  # BND
-                    "short_term_treasuries": Decimal("4.0"),  # VGSH
-                    "intermediate_term_treasuries": Decimal("4.2"),  # VGIT
-                    "municipal_bonds": Decimal("3.5"),  # VTEB (tax-exempt)
-                    # Cash & Other
-                    "cash": Decimal("3.5"),  # VMFXX
-                    "other": Decimal("5.0"),  # Default assumption
-                }
-                blended = Decimal("0")
-                for key, pct in allocation.items():
-                    if key in returns:
-                        blended += Decimal(str(pct)) * returns[key] / Decimal("100")
-                return blended if blended > 0 else Decimal("6.0")
-        return Decimal("6.0")  # Default
+        """Calculate blended return using 10-year institutional projections (all asset classes)."""
+        allocation = self._asset_allocation_as_dict(scenario)
+        if not allocation:
+            return Decimal("6.0")
+        # 10-year expected returns by asset class (Vanguard ETFs)
+        returns = {
+            # US Equities
+            "total_us_stock": Decimal("7.5"),  # VTI
+            "us_small_cap_value": Decimal("8.5"),  # VBR
+            # International Equities
+            "total_foreign_stock": Decimal("7.0"),  # VXUS
+            "international_small_cap_value": Decimal("8.0"),  # VSS
+            "developed_markets": Decimal("6.5"),  # VEA
+            "emerging_markets": Decimal("8.0"),  # VWO
+            # Real Estate
+            "reits": Decimal("9.5"),  # VNQ - 10-year forecast
+            # Fixed Income
+            "bonds": Decimal("4.5"),  # BND
+            "short_term_treasuries": Decimal("4.0"),  # VGSH
+            "intermediate_term_treasuries": Decimal("4.2"),  # VGIT
+            "municipal_bonds": Decimal("3.5"),  # VTEB (tax-exempt)
+            # Cash & Other
+            "cash": Decimal("3.5"),  # VMFXX
+            "other": Decimal("5.0"),  # Default assumption
+        }
+        blended = Decimal("0")
+        for key, pct in allocation.items():
+            if key in returns:
+                blended += Decimal(str(pct)) * returns[key] / Decimal("100")
+        return blended if blended > 0 else Decimal("6.0")
 
     def _get_historical_blended_return(self, scenario) -> Decimal:
-        """Calculate blended return using long-term historical averages."""
-        if hasattr(scenario, "asset_allocation"):
-            allocation = scenario.asset_allocation
-            if isinstance(allocation, dict):
-                # Long-term historical averages by asset class
-                returns = {
-                    # US Equities
-                    "total_us_stock": Decimal("10.0"),  # ~10% long-term average
-                    "us_small_cap_value": Decimal("13.0"),  # ~13% long-term average
-                    # International Equities
-                    "total_foreign_stock": Decimal("8.5"),  # ~8.5% long-term average
-                    "international_small_cap_value": Decimal("10.0"),  # ~10% long-term average
-                    "developed_markets": Decimal("8.0"),  # ~8% long-term average
-                    "emerging_markets": Decimal("9.0"),  # ~9% long-term average
-                    # Real Estate
-                    "reits": Decimal("9.35"),  # 30-year historical average
-                    # Fixed Income
-                    "bonds": Decimal("4.5"),  # ~4.5% long-term average
-                    "short_term_treasuries": Decimal("4.0"),  # ~4% long-term average
-                    "intermediate_term_treasuries": Decimal("4.2"),  # ~4.2% long-term average
-                    "municipal_bonds": Decimal("4.2"),  # ~4.2% long-term average
-                    # Cash & Other
-                    "cash": Decimal("3.31"),  # Historical T-bill average
-                    "other": Decimal("5.0"),  # Default assumption
-                }
-                blended = Decimal("0")
-                for key, pct in allocation.items():
-                    if key in returns:
-                        blended += Decimal(str(pct)) * returns[key] / Decimal("100")
-                return blended if blended > 0 else Decimal("10.0")
-        return Decimal("10.0")  # Default historical average
+        """Calculate blended return using long-term historical averages (all asset classes)."""
+        allocation = self._asset_allocation_as_dict(scenario)
+        if not allocation:
+            return Decimal("10.0")
+        returns = {
+            # US Equities
+            "total_us_stock": Decimal("10.0"),
+            "us_small_cap_value": Decimal("13.0"),
+            # International Equities
+            "total_foreign_stock": Decimal("8.5"),
+            "international_small_cap_value": Decimal("10.0"),
+            "developed_markets": Decimal("8.0"),
+            "emerging_markets": Decimal("9.0"),
+            # Real Estate
+            "reits": Decimal("9.35"),
+            # Fixed Income
+            "bonds": Decimal("4.5"),
+            "short_term_treasuries": Decimal("4.0"),
+            "intermediate_term_treasuries": Decimal("4.2"),
+            "municipal_bonds": Decimal("4.2"),
+            # Cash & Other
+            "cash": Decimal("3.31"),
+            "other": Decimal("5.0"),
+        }
+        blended = Decimal("0")
+        for key, pct in allocation.items():
+            if key in returns:
+                blended += Decimal(str(pct)) * returns[key] / Decimal("100")
+        return blended if blended > 0 else Decimal("10.0")
 
-    def _calculate_federal_tax(self, taxable_income: Decimal, filing_status: str) -> Decimal:
-        """Calculate federal income tax based on 2024 brackets."""
+    def _calculate_federal_tax(
+        self,
+        taxable_income: Decimal,
+        filing_status: str,
+        bracket_scale: Decimal = Decimal("1"),
+    ) -> Decimal:
+        """Calculate federal income tax based on 2024 brackets (thresholds × bracket_scale)."""
         if taxable_income <= 0:
             return Decimal("0")
 
-        # 2024 Federal Tax Brackets
+        scale = bracket_scale if bracket_scale > 0 else Decimal("1")
+
+        # 2024 Federal Tax Bracket thresholds (scale approximates IRS annual bracket indexing)
         if filing_status == "married_filing_jointly":
-            brackets = [
+            raw_brackets = [
                 (Decimal("23200"), Decimal("0.10")),
                 (Decimal("94300"), Decimal("0.12")),
                 (Decimal("201050"), Decimal("0.22")),
@@ -1663,7 +1702,7 @@ class RetirementScenarioService:
                 (Decimal("999999999"), Decimal("0.37")),
             ]
         elif filing_status == "single":
-            brackets = [
+            raw_brackets = [
                 (Decimal("11600"), Decimal("0.10")),
                 (Decimal("47150"), Decimal("0.12")),
                 (Decimal("100525"), Decimal("0.22")),
@@ -1673,7 +1712,7 @@ class RetirementScenarioService:
                 (Decimal("999999999"), Decimal("0.37")),
             ]
         else:  # head_of_household or default
-            brackets = [
+            raw_brackets = [
                 (Decimal("16550"), Decimal("0.10")),
                 (Decimal("63100"), Decimal("0.12")),
                 (Decimal("100500"), Decimal("0.22")),
@@ -1682,6 +1721,8 @@ class RetirementScenarioService:
                 (Decimal("609350"), Decimal("0.35")),
                 (Decimal("999999999"), Decimal("0.37")),
             ]
+
+        brackets = [(lim * scale, rate) for lim, rate in raw_brackets]
 
         tax = Decimal("0")
         remaining_income = taxable_income

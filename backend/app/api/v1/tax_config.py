@@ -63,13 +63,27 @@ def calculate_senior_deductions(
     spouse_age: int | None = Query(None, description="Age of spouse"),
     annual_income: float | None = Query(None, description="Annual income"),
     tax_year: int = Query(2026, description="Tax year"),
+    annual_inflation_percent: float = Query(
+        2.5,
+        description="Annual inflation % for indexing $150k cutoff and senior add-ons from reference_year to tax_year",
+    ),
+    reference_year: int = Query(
+        2026,
+        description="Base year for $150k threshold and $1,650 / $6,000 senior amounts before indexing",
+    ),
     db: Session = Depends(get_db),
 ):
     """Calculate senior deductions breakdown."""
     service = TaxConfigService(db)
     income_decimal = Decimal(str(annual_income)) if annual_income else None
     return service.calculate_senior_deductions(
-        filing_status, primary_age, spouse_age, income_decimal, tax_year
+        filing_status,
+        primary_age,
+        spouse_age,
+        income_decimal,
+        tax_year,
+        Decimal(str(annual_inflation_percent)),
+        reference_year,
     )
 
 

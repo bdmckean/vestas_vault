@@ -30,6 +30,27 @@ import type {
 import type { FixedExpense, FixedExpenseCreate } from '../types/fixed_expense';
 import { DEFAULT_ASSET_ALLOCATION } from '../types/saved_scenario';
 
+/** FastAPI may return `detail` as a string, object, or list of validation errors */
+function formatApiError(err: unknown, fallback: string): string {
+  const ax = err as { response?: { data?: { detail?: unknown } }; message?: string };
+  const d = ax.response?.data?.detail;
+  if (typeof d === 'string') return d;
+  if (Array.isArray(d)) {
+    return d
+      .map((item: unknown) => {
+        if (typeof item === 'string') return item;
+        if (item && typeof item === 'object' && 'msg' in item) {
+          return String((item as { msg: string }).msg);
+        }
+        return JSON.stringify(item);
+      })
+      .join(' ');
+  }
+  if (d && typeof d === 'object') return JSON.stringify(d);
+  if (ax.message) return ax.message;
+  return fallback;
+}
+
 export function ScenarioModelingPage() {
   const queryClient = useQueryClient();
   const { data: scenarios, isLoading } = useSavedScenarios();
@@ -114,6 +135,7 @@ export function ScenarioModelingPage() {
     spouse_ss_start_age_months: null,
     monthly_spending: '10000',
     annual_lump_spending: '0',
+    additional_other_income_annual: '0',
     inflation_adjusted_percent: '50',
     spending_reduction_percent: '0',
     spending_reduction_start_year: null,
@@ -168,6 +190,28 @@ export function ScenarioModelingPage() {
     }).format(num);
   };
 
+  const formatCompactCurrency = (value: number): string => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      notation: 'compact',
+      maximumFractionDigits: 1,
+    }).format(value);
+  };
+
+  const accountBalanceChartData = (projection?.projections ?? []).map(p => {
+    const pretax = parseFloat(String(p.pretax_ending_balance || '0'));
+    const roth = parseFloat(String(p.roth_ending_balance || '0'));
+    const taxable = parseFloat(String(p.taxable_ending_balance || '0'));
+    const cash = parseFloat(String(p.cash_ending_balance || '0'));
+    const total = pretax + roth + taxable + cash;
+    return { year: p.calendar_year, pretax, roth, taxable, cash, total };
+  });
+  const maxAccountTotal = Math.max(
+    1,
+    ...accountBalanceChartData.map(row => (Number.isFinite(row.total) ? row.total : 0))
+  );
+
   // Convert projection year to calendar year (projection year 1 = current year)
   const projectionYearToCalendarYear = (projectionYear: number): number => {
     const currentYear = new Date().getFullYear();
@@ -183,6 +227,7 @@ export function ScenarioModelingPage() {
       ss_start_age_months: 0,
       monthly_spending: '10000',
       annual_lump_spending: '0',
+      additional_other_income_annual: '0',
       inflation_adjusted_percent: '50',
       spending_reduction_percent: '0',
       spending_reduction_start_year: null,
@@ -203,6 +248,20 @@ export function ScenarioModelingPage() {
     setError(null);
   };
 
+  // Allow keyboard dismissal for the scenario modal.
+  useEffect(() => {
+    if (!showForm) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        resetForm();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showForm]);
+
   const handleEdit = (scenario: SavedScenario) => {
     setStockWithinPctDrafts({});
     setEditingScenario(scenario);
@@ -215,6 +274,7 @@ export function ScenarioModelingPage() {
       spouse_ss_start_age_months: scenario.spouse_ss_start_age_months ?? null,
       monthly_spending: scenario.monthly_spending,
       annual_lump_spending: scenario.annual_lump_spending,
+      additional_other_income_annual: scenario.additional_other_income_annual ?? '0',
       inflation_adjusted_percent: scenario.inflation_adjusted_percent,
       spending_reduction_percent: scenario.spending_reduction_percent,
       spending_reduction_start_year: scenario.spending_reduction_start_year,
@@ -267,7 +327,9 @@ export function ScenarioModelingPage() {
       (sum, val) => sum + parseFloat(val || '0'),
       0
     );
-    if (Math.abs(allocTotal - 100) > 0.001) {
+    // Bucket strategy recomputes many lines with .toFixed(2); sum can be 99.9–100.1
+    const allocTolerance = dataToSubmit.use_bucket_strategy ? 0.55 : 0.01;
+    if (Math.abs(allocTotal - 100) > allocTolerance) {
       setError(`Asset allocation must sum to 100% (currently ${allocTotal.toFixed(2)}%)`);
       return;
     }
@@ -281,8 +343,8 @@ export function ScenarioModelingPage() {
         setSuccess('Scenario created successfully');
       }
       resetForm();
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Error saving scenario');
+    } catch (err: unknown) {
+      setError(formatApiError(err, 'Error saving scenario'));
     }
   };
 
@@ -294,8 +356,8 @@ export function ScenarioModelingPage() {
         setSelectedScenarioId(null);
       }
       setSuccess('Scenario deleted');
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Error deleting scenario');
+    } catch (err: unknown) {
+      setError(formatApiError(err, 'Error deleting scenario'));
     }
   };
 
@@ -307,8 +369,8 @@ export function ScenarioModelingPage() {
       setSuccess('Scenario duplicated with all loans and settings');
       // Refresh fixed expenses to show the copied ones
       queryClient.invalidateQueries('fixed-expenses');
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Error duplicating scenario');
+    } catch (err: unknown) {
+      setError(formatApiError(err, 'Error duplicating scenario'));
     }
   };
 
@@ -320,8 +382,8 @@ export function ScenarioModelingPage() {
     try {
       const result = await compareMutation.mutateAsync(compareIds);
       setComparisonResult(result);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Error comparing scenarios');
+    } catch (err: unknown) {
+      setError(formatApiError(err, 'Error comparing scenarios'));
     }
   };
 
@@ -531,6 +593,13 @@ export function ScenarioModelingPage() {
           <p className="text-gray-600 mt-2">
             Create and compare retirement scenarios with different SS timing and spending levels.
           </p>
+          <p className="text-sm text-gray-500 mt-1">
+            Other Income is global. Edit it on the{' '}
+            <Link to="/other-income" className="underline">
+              Other Income
+            </Link>{' '}
+            page and scenario projections will update automatically.
+          </p>
         </div>
         <button
           onClick={() => setShowForm(true)}
@@ -717,10 +786,9 @@ export function ScenarioModelingPage() {
                                       setEditingScenario(updatedScenario);
                                     }
                                   },
-                                  onError: (err: any) => {
+                                  onError: (err: unknown) => {
                                     setError(
-                                      err.response?.data?.detail ||
-                                        'Error updating default scenario'
+                                      formatApiError(err, 'Error updating default scenario')
                                     );
                                   },
                                 });
@@ -968,6 +1036,68 @@ export function ScenarioModelingPage() {
                 </div>
               </div>
 
+              {accountBalanceChartData.length > 0 && (
+                <div className="mb-6 rounded-lg border border-gray-200 p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold text-gray-900">
+                      Assets by Account Type (Year End)
+                    </h3>
+                    <span className="text-xs text-gray-500">
+                      Max total: {formatCompactCurrency(maxAccountTotal)}
+                    </span>
+                  </div>
+                  <div className="h-56 flex items-end gap-1 overflow-x-auto pb-12">
+                    {accountBalanceChartData.map(row => {
+                      const pretaxH = (row.pretax / maxAccountTotal) * 100;
+                      const rothH = (row.roth / maxAccountTotal) * 100;
+                      const taxableH = (row.taxable / maxAccountTotal) * 100;
+                      const cashH = (row.cash / maxAccountTotal) * 100;
+                      return (
+                        <div
+                          key={row.year}
+                          className="min-w-[20px] h-full flex-1 flex flex-col items-center justify-end"
+                          title={`${row.year} • Pretax ${formatCurrency(
+                            row.pretax
+                          )} • Roth ${formatCurrency(row.roth)} • Taxable ${formatCurrency(
+                            row.taxable
+                          )} • Cash ${formatCurrency(row.cash)} • Total ${formatCurrency(
+                            row.total
+                          )}`}
+                        >
+                          <div className="w-full h-full rounded-t-sm overflow-hidden bg-gray-100 flex flex-col-reverse">
+                            <div className="bg-gray-500" style={{ height: `${cashH}%` }} />
+                            <div className="bg-purple-500" style={{ height: `${taxableH}%` }} />
+                            <div className="bg-green-500" style={{ height: `${rothH}%` }} />
+                            <div className="bg-blue-500" style={{ height: `${pretaxH}%` }} />
+                          </div>
+                          <span className="text-[10px] text-gray-500 mt-4 origin-top-left -rotate-45 whitespace-nowrap">
+                            {row.year}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="mt-3 flex items-center gap-4 text-xs text-gray-600">
+                    <span className="inline-flex items-center gap-1">
+                      <span className="inline-block h-2.5 w-2.5 rounded-sm bg-blue-500" />
+                      Pretax
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <span className="inline-block h-2.5 w-2.5 rounded-sm bg-green-500" />
+                      Roth
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <span className="inline-block h-2.5 w-2.5 rounded-sm bg-purple-500" />
+                      Taxable
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <span className="inline-block h-2.5 w-2.5 rounded-sm bg-gray-500" />
+                      Cash
+                    </span>
+                  </div>
+                </div>
+              )}
+
               {/* Year-by-Year Table */}
               <div className="max-h-96 overflow-x-auto overflow-y-auto">
                 <table className="min-w-full divide-y divide-gray-200 text-sm">
@@ -1041,6 +1171,12 @@ export function ScenarioModelingPage() {
                         Withdrawal %
                       </th>
                       <th
+                        className="px-2 py-2 text-right text-xs font-medium text-gray-500"
+                        title="Blended portfolio return rate applied this year (from scenario return model)"
+                      >
+                        Return %
+                      </th>
+                      <th
                         className="px-2 py-2 text-right text-xs font-medium text-gray-500 bg-blue-50"
                         title="Withdrawal from pretax"
                       >
@@ -1064,8 +1200,11 @@ export function ScenarioModelingPage() {
                       >
                         R W
                       </th>
-                      <th className="px-2 py-2 text-right text-xs font-medium text-gray-500">
-                        Return
+                      <th
+                        className="px-2 py-2 text-right text-xs font-medium text-gray-500"
+                        title="Dollar investment gain/loss (before tax) on average balances"
+                      >
+                        Return $
                       </th>
                       <th className="px-2 py-2 text-right text-xs font-medium text-gray-500">
                         End Bal
@@ -1143,6 +1282,11 @@ export function ScenarioModelingPage() {
                             ? `${parseFloat(p.withdrawal_rate_percent).toFixed(2)}%`
                             : '—'}
                         </td>
+                        <td className="px-2 py-2 text-right text-indigo-600">
+                          {p.return_percent != null && p.return_percent !== ''
+                            ? `${parseFloat(String(p.return_percent)).toFixed(2)}%`
+                            : '—'}
+                        </td>
                         <td className="px-2 py-2 text-right text-blue-600 text-xs">
                           {formatCurrency(p.pretax_withdrawal ?? '0')}
                         </td>
@@ -1199,6 +1343,16 @@ export function ScenarioModelingPage() {
               {editingScenario ? 'Edit Scenario' : 'New Scenario'}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+                  {error}
+                </div>
+              )}
+              {success && (
+                <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">
+                  {success}
+                </div>
+              )}
               {/* Name & Description */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -1234,7 +1388,7 @@ export function ScenarioModelingPage() {
               {/* Social Security */}
               <div className="border-t pt-4">
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">Social Security</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       SS Start Age (Years)
@@ -1371,6 +1525,30 @@ export function ScenarioModelingPage() {
                         className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                     </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Additional Income (Annual)
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                        $
+                      </span>
+                      <input
+                        type="number"
+                        value={formData.additional_other_income_annual ?? '0'}
+                        onChange={e =>
+                          setFormData({
+                            ...formData,
+                            additional_other_income_annual: e.target.value,
+                          })
+                        }
+                        className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                    </div>
+                    <p className="mt-1 text-xs text-gray-500">
+                      Added on top of global Other Income for this scenario.
+                    </p>
                   </div>
                 </div>
                 {/* Fixed Expenses Section */}

@@ -7,9 +7,11 @@ import { DashboardPage } from './pages/DashboardPage';
 import { OtherIncomePage } from './pages/OtherIncomePage';
 import { PlannedSpendingPage } from './pages/PlannedSpendingPage';
 import { PortfolioPage } from './pages/PortfolioPage';
+import { MonteCarloPage } from './pages/MonteCarloPage';
 import { ScenarioModelingPage } from './pages/ScenarioModelingPage';
 import { SocialSecurityPage } from './pages/SocialSecurityPage';
 import { TaxPage } from './pages/TaxPage';
+import { VisualizationsPage } from './pages/VisualizationsPage';
 
 const queryClient = new QueryClient();
 
@@ -29,6 +31,8 @@ function App() {
             <Route path="/tax" element={<TaxPage />} />
             <Route path="/asset-projections" element={<AssetProjectionsPage />} />
             <Route path="/scenario-modeling" element={<ScenarioModelingPage />} />
+            <Route path="/visualizations" element={<VisualizationsPage />} />
+            <Route path="/monte-carlo" element={<MonteCarloPage />} />
           </Routes>
         </div>
       </BrowserRouter>

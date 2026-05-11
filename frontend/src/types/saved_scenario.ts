@@ -24,6 +24,7 @@ export interface SavedScenario {
   spouse_ss_start_age_months: number | null;
   monthly_spending: string;
   annual_lump_spending: string;
+  additional_other_income_annual: string;
   inflation_adjusted_percent: string;
   spending_reduction_percent: string;
   spending_reduction_start_year: number | null;
@@ -51,6 +52,7 @@ export interface SavedScenarioCreate {
   spouse_ss_start_age_months?: number | null;
   monthly_spending: string;
   annual_lump_spending: string;
+  additional_other_income_annual?: string;
   inflation_adjusted_percent: string;
   spending_reduction_percent: string;
   spending_reduction_start_year?: number | null;
@@ -76,6 +78,7 @@ export interface SavedScenarioUpdate {
   spouse_ss_start_age_months?: number | null;
   monthly_spending?: string;
   annual_lump_spending?: string;
+  additional_other_income_annual?: string;
   inflation_adjusted_percent?: string;
   spending_reduction_percent?: string;
   spending_reduction_start_year?: number | null;

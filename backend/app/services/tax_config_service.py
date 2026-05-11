@@ -79,15 +79,17 @@ class TaxConfigService:
         spouse_age: int | None,
         annual_income: Decimal | None,
         tax_year: int = 2026,
+        annual_inflation_percent: Decimal = Decimal("2.5"),
+        reference_year: int = 2026,
     ) -> SeniorDeductionBreakdown:
         """
         Calculate senior deductions based on age and income.
         If primary_age or spouse_age is not provided, derives them from Social Security birth dates.
 
-        For 2026:
-        - Base Standard Deduction: Varies by filing status
-        - Additional Senior Deduction: $1,650 per person 65+
-        - Bonus Senior Deduction: $6,000 per person 65+ if income under $150k
+        Base amounts (reference_year, typically 2026):
+        - Base Standard Deduction: from JSON by tax_year
+        - Additional Senior Deduction: $1,650 per person 65+ (indexed from reference_year)
+        - Bonus Senior Deduction: $6,000 per person 65+ if income under $150k (indexed)
         """
         # Derive ages from SS birth dates when not provided
         if primary_age is None or (
@@ -130,29 +132,35 @@ class TaxConfigService:
             str(standard_deductions.get(str(tax_year), {}).get(filing_status, 0))
         )
 
-        # Calculate additional senior deduction ($1,650 per person 65+)
+        # Index OBBB-style fixed dollar amounts from reference_year (e.g. 2026) to tax_year
+        years_from_ref = max(0, tax_year - reference_year)
+        index_factor = (Decimal("1") + annual_inflation_percent / Decimal("100")) ** years_from_ref
+        additional_senior_unit = (Decimal("1650") * index_factor).quantize(Decimal("0.01"))
+        bonus_senior_unit = (Decimal("6000") * index_factor).quantize(Decimal("0.01"))
+        income_threshold = (Decimal("150000") * index_factor).quantize(Decimal("0.01"))
+
+        # Calculate additional senior deduction ($1,650 per person 65+, indexed)
         additional_senior = Decimal("0")
         if primary_age and primary_age >= 65:
-            additional_senior += Decimal("1650")
+            additional_senior += additional_senior_unit
         if (
             filing_status in ["married_filing_jointly", "qualifying_widow"]
             and spouse_age
             and spouse_age >= 65
         ):
-            additional_senior += Decimal("1650")
+            additional_senior += additional_senior_unit
 
-        # Calculate bonus senior deduction ($6,000 per person 65+ if income < $150k)
+        # Calculate bonus senior deduction ($6,000 per person 65+ if income under threshold, indexed)
         bonus_senior = Decimal("0")
-        income_threshold = Decimal("150000")
         if annual_income and annual_income < income_threshold:
             if primary_age and primary_age >= 65:
-                bonus_senior += Decimal("6000")
+                bonus_senior += bonus_senior_unit
             if (
                 filing_status in ["married_filing_jointly", "qualifying_widow"]
                 and spouse_age
                 and spouse_age >= 65
             ):
-                bonus_senior += Decimal("6000")
+                bonus_senior += bonus_senior_unit
 
         total_automatic = base_standard + additional_senior + bonus_senior
 
@@ -161,11 +169,13 @@ class TaxConfigService:
         explanation_parts.append(f"Base Standard Deduction: ${base_standard:,.0f}")
         if additional_senior > 0:
             explanation_parts.append(
-                f"Additional Senior Deduction: ${additional_senior:,.0f} ($1,650 per person 65+)"
+                f"Additional Senior Deduction: ${additional_senior:,.0f} "
+                f"(${additional_senior_unit:,.0f} per person 65+, indexed from {reference_year})"
             )
         if bonus_senior > 0:
             explanation_parts.append(
-                f"Bonus Senior Deduction: ${bonus_senior:,.0f} ($6,000 per person 65+ with income < $150k)"
+                f"Bonus Senior Deduction: ${bonus_senior:,.0f} "
+                f"(${bonus_senior_unit:,.0f} per person 65+ with income < ${income_threshold:,.0f})"
             )
         explanation = " + ".join(explanation_parts)
 

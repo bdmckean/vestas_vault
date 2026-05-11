@@ -86,6 +86,11 @@ class SavedScenarioBase(BaseModel):
     annual_lump_spending: Decimal = Field(
         Decimal("0"), ge=0, description="Annual lump sum spending"
     )
+    additional_other_income_annual: Decimal = Field(
+        Decimal("0"),
+        ge=0,
+        description="Scenario-specific annual income added to global Other Income",
+    )
     inflation_adjusted_percent: Decimal = Field(
         Decimal("50"),
         ge=0,
@@ -158,6 +163,7 @@ class SavedScenarioUpdate(BaseModel):
     spouse_ss_start_age_months: Optional[int] = Field(None, ge=0, le=11)
     monthly_spending: Optional[Decimal] = Field(None, ge=0)
     annual_lump_spending: Optional[Decimal] = Field(None, ge=0)
+    additional_other_income_annual: Optional[Decimal] = Field(None, ge=0)
     inflation_adjusted_percent: Optional[Decimal] = Field(None, ge=0, le=100)
     spending_reduction_percent: Optional[Decimal] = Field(None, ge=0, le=100)
     spending_reduction_start_year: Optional[int] = Field(None, ge=1)

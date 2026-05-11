@@ -39,6 +39,27 @@ def _run_tax_config_state_migration():
 
 _run_tax_config_state_migration()
 
+
+def _run_saved_scenarios_additional_income_migration():
+    """Add saved_scenarios.additional_other_income_annual column if missing."""
+    if "postgresql" not in settings.database_url:
+        return
+    try:
+        with engine.connect() as conn:
+            conn.execute(
+                text(
+                    "ALTER TABLE saved_scenarios "
+                    "ADD COLUMN IF NOT EXISTS additional_other_income_annual NUMERIC(12,2) "
+                    "NOT NULL DEFAULT 0"
+                )
+            )
+            conn.commit()
+    except Exception as e:
+        logger.warning("Saved scenarios additional income migration skipped or failed: %s", e)
+
+
+_run_saved_scenarios_additional_income_migration()
+
 app = FastAPI(
     title="Retirement Planner API",
     description="API for retirement planning and portfolio management",
