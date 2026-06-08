@@ -52,6 +52,13 @@ class MonteCarloYearPercentile(BaseModel):
     p90: float
 
 
+class MonteCarloBaselineYear(BaseModel):
+    """Baseline (deterministic) projection for comparison."""
+
+    year: int
+    balance: float
+
+
 class MonteCarloRunResponse(BaseModel):
     """Monte Carlo fan-chart ready output (MVP)."""
 
@@ -62,4 +69,8 @@ class MonteCarloRunResponse(BaseModel):
     success_rate_pct: float
     terminal_percentiles: dict[str, float]
     yearly_percentiles: list[MonteCarloYearPercentile]
+    baseline_projection: list[MonteCarloBaselineYear]
+    baseline_percentile: float = Field(
+        ..., description="Percentile rank of baseline terminal value (0-100)"
+    )
     assumptions: dict[str, float | str]

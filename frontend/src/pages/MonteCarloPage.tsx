@@ -69,10 +69,21 @@ export function MonteCarloPage() {
         </div>
       ) : (
         <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 text-sm">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4 text-sm">
             <div className="bg-green-50 rounded p-3">
               <div className="text-gray-600">Success Rate</div>
               <div className="font-semibold text-green-700">{mc.success_rate_pct}%</div>
+            </div>
+            <div className="bg-blue-50 rounded p-3 border-2 border-blue-300">
+              <div className="text-gray-600">Baseline</div>
+              <div className="font-semibold text-blue-800">≈ {mc.baseline_percentile}th %ile</div>
+              <div className="text-xs text-gray-500 mt-1">
+                {mc.baseline_percentile >= 40 && mc.baseline_percentile <= 60
+                  ? 'Reasonable'
+                  : mc.baseline_percentile < 30 || mc.baseline_percentile > 70
+                    ? 'Check assumptions'
+                    : 'Review plan'}
+              </div>
             </div>
             <div className="bg-gray-50 rounded p-3">
               <div className="text-gray-600">P50 Terminal</div>
@@ -104,64 +115,103 @@ export function MonteCarloPage() {
           </div>
           {(() => {
             const rows = mc.yearly_percentiles ?? [];
+            const baseline = mc.baseline_projection ?? [];
             const step = 22;
             const width = Math.max(1, rows.length * step);
             const allVals = rows.flatMap(r => [r.p10, r.p25, r.p50, r.p75, r.p90]);
-            const maxY = Math.max(1, ...allVals);
+            // Include baseline values in maxY calculation for proper scaling
+            const baselineVals = baseline.map(b => b.balance);
+            const maxY = Math.max(1, ...allVals, ...baselineVals);
             const chartHeight = 232;
             // viewBox y: 0 = top (maxY), 100 = bottom ($0)
             const line = (key: 'p10' | 'p25' | 'p50' | 'p75' | 'p90') =>
               rows.map((r, i) => `${i * step + 10},${100 - (r[key] / maxY) * 100}`).join(' ');
+            // Baseline line: map baseline balances to SVG coordinates
+            const baselineLine = baseline
+              .map((b, i) => `${i * step + 10},${100 - (b.balance / maxY) * 100}`)
+              .join(' ');
             return (
-              <div className="h-72 overflow-x-auto border rounded p-2 bg-white">
-                <div className="h-full" style={{ width: `${width}px` }}>
-                  <div className="relative" style={{ height: `${chartHeight}px` }}>
-                    <svg
-                      className="w-full h-full block"
-                      viewBox={`0 0 ${width} 100`}
-                      preserveAspectRatio="none"
-                    >
-                      <line
-                        x1="0"
-                        y1="100"
-                        x2={width}
-                        y2="100"
-                        stroke="#9ca3af"
-                        strokeWidth="0.6"
-                      />
-                      <polygon
-                        points={`${line('p10')} ${line('p90').split(' ').reverse().join(' ')}`}
-                        fill="#bfdbfe"
-                        opacity="0.5"
-                      />
-                      <polygon
-                        points={`${line('p25')} ${line('p75').split(' ').reverse().join(' ')}`}
-                        fill="#60a5fa"
-                        opacity="0.4"
-                      />
-                      <polyline
-                        points={line('p50')}
-                        fill="none"
-                        stroke="#1d4ed8"
-                        strokeWidth="1.8"
-                      />
-                    </svg>
-                  </div>
-                  <div className="relative h-8 pointer-events-none">
-                    {rows.map((r, i) => (
-                      <span
-                        key={`mcy-${r.year}`}
-                        className="absolute text-[10px] text-gray-500 whitespace-nowrap"
-                        style={{
-                          left: `${i * step + 10}px`,
-                          bottom: '2px',
-                          transform: 'translateX(-50%) rotate(-45deg)',
-                          transformOrigin: 'top left',
-                        }}
+              <div>
+                <div className="h-72 overflow-x-auto border rounded p-2 bg-white">
+                  <div className="h-full" style={{ width: `${width}px` }}>
+                    <div className="relative" style={{ height: `${chartHeight}px` }}>
+                      <svg
+                        className="w-full h-full block"
+                        viewBox={`0 0 ${width} 100`}
+                        preserveAspectRatio="none"
                       >
-                        {currentYear + r.year - 1}
-                      </span>
-                    ))}
+                        <line
+                          x1="0"
+                          y1="100"
+                          x2={width}
+                          y2="100"
+                          stroke="#9ca3af"
+                          strokeWidth="0.6"
+                        />
+                        <polygon
+                          points={`${line('p10')} ${line('p90').split(' ').reverse().join(' ')}`}
+                          fill="#bfdbfe"
+                          opacity="0.5"
+                        />
+                        <polygon
+                          points={`${line('p25')} ${line('p75').split(' ').reverse().join(' ')}`}
+                          fill="#60a5fa"
+                          opacity="0.4"
+                        />
+                        <polyline
+                          points={line('p50')}
+                          fill="none"
+                          stroke="#1d4ed8"
+                          strokeWidth="1.8"
+                        />
+                        {/* Baseline overlay - dashed line */}
+                        {baselineLine && (
+                          <polyline
+                            points={baselineLine}
+                            fill="none"
+                            stroke="#0f172a"
+                            strokeWidth="1.5"
+                            strokeDasharray="4,3"
+                            strokeLinecap="round"
+                          />
+                        )}
+                      </svg>
+                    </div>
+                    <div className="relative h-8 pointer-events-none">
+                      {rows.map((r, i) => (
+                        <span
+                          key={`mcy-${r.year}`}
+                          className="absolute text-[10px] text-gray-500 whitespace-nowrap"
+                          style={{
+                            left: `${i * step + 10}px`,
+                            bottom: '2px',
+                            transform: 'translateX(-50%) rotate(-45deg)',
+                            transformOrigin: 'top left',
+                          }}
+                        >
+                          {currentYear + r.year - 1}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                {/* Legend */}
+                <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-gray-600">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-0.5 bg-blue-300"></div>
+                    <span>P10-P90 range</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-0.5 bg-blue-500"></div>
+                    <span>P25-P75 range</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-0.5 bg-blue-700"></div>
+                    <span>P50 median</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 border-t-2 border-dashed border-gray-900"></div>
+                    <span>Baseline projection</span>
                   </div>
                 </div>
               </div>

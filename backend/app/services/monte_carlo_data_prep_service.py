@@ -24,6 +24,7 @@ from app.schemas.monte_carlo import (
     MonteCarloRunResponse,
     MonteCarloDataPrepSummary,
     MonteCarloYearPercentile,
+    MonteCarloBaselineYear,
     MonteCarloPreparedSeries,
 )
 
@@ -199,6 +200,10 @@ class MonteCarloDataPrepService:
             float(getattr(y, "portfolio_withdrawal", 0) or 0)
             for y in baseline_projection.projections
         ]
+        # Extract baseline ending balances for overlay
+        baseline_balances = [
+            float(getattr(y, "ending_balance", 0) or 0) for y in baseline_projection.projections
+        ]
         start_age = (
             float(getattr(baseline_projection.projections[0], "age", 0))
             if baseline_projection.projections
@@ -264,6 +269,17 @@ class MonteCarloDataPrepService:
             "p90": percentile(terminal_values, 90),
         }
 
+        # Build baseline projection for overlay
+        baseline_years: list[MonteCarloBaselineYear] = []
+        for i, balance in enumerate(baseline_balances[:horizon]):
+            baseline_years.append(MonteCarloBaselineYear(year=i + 1, balance=round(balance, 2)))
+
+        # Calculate where baseline terminal value falls in distribution
+        baseline_terminal = baseline_balances[min(horizon - 1, len(baseline_balances) - 1)]
+        sorted_terminals = sorted(terminal_values)
+        baseline_rank = sum(1 for v in sorted_terminals if v <= baseline_terminal)
+        baseline_percentile = round((baseline_rank / len(sorted_terminals)) * 100.0, 1)
+
         return MonteCarloRunResponse(
             scenario_id=scenario.id,
             scenario_name=scenario.name,
@@ -272,6 +288,8 @@ class MonteCarloDataPrepService:
             success_rate_pct=success_rate,
             terminal_percentiles=terminal_percentiles,
             yearly_percentiles=yearly_percentiles,
+            baseline_projection=baseline_years,
+            baseline_percentile=baseline_percentile,
             assumptions={
                 "period_key": period_key,
                 "expected_return_pct": round(expected_return, 4),

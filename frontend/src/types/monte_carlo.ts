@@ -7,6 +7,11 @@ export interface MonteCarloYearPercentile {
   p90: number;
 }
 
+export interface MonteCarloBaselineYear {
+  year: number;
+  balance: number;
+}
+
 export interface MonteCarloRunResponse {
   scenario_id: string;
   scenario_name: string;
@@ -15,5 +20,7 @@ export interface MonteCarloRunResponse {
   success_rate_pct: number;
   terminal_percentiles: Record<string, number>;
   yearly_percentiles: MonteCarloYearPercentile[];
+  baseline_projection: MonteCarloBaselineYear[];
+  baseline_percentile: number;
   assumptions: Record<string, string | number>;
 }
