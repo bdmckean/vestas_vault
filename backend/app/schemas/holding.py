@@ -19,6 +19,7 @@ class AssetClass(str, Enum):
     DEVELOPED_MARKETS = "developed_markets"
     EMERGING_MARKETS = "emerging_markets"
     REITS = "reits"
+    GOLD = "gold"
     BONDS = "bonds"
     SHORT_TERM_TREASURIES = "short_term_treasuries"
     INTERMEDIATE_TERM_TREASURIES = "intermediate_term_treasuries"

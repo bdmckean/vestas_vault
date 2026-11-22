@@ -399,6 +399,7 @@ export function ScenarioModelingPage() {
     'developed_markets',
     'emerging_markets',
     'reits',
+    'gold',
     'other',
   ];
   const STOCK_ALLOCATION_OPTIONS: { key: keyof AssetAllocation; label: string }[] = [
@@ -409,6 +410,7 @@ export function ScenarioModelingPage() {
     { key: 'developed_markets', label: 'Developed (VEA)' },
     { key: 'emerging_markets', label: 'Emerging (VWO)' },
     { key: 'reits', label: 'REITs (VNQ)' },
+    { key: 'gold', label: 'Gold (GLD)' },
     { key: 'other', label: 'Other' },
   ];
 
@@ -2276,6 +2278,61 @@ export function ScenarioModelingPage() {
                   <h4 className="text-sm font-medium text-gray-600 mb-2">Real Estate</h4>
                   <div className="grid grid-cols-2 gap-2">
                     {[{ key: 'reits', label: 'REITs (VNQ)', return: '9.5%' }].map(
+                      ({ key, label, return: ret }) => (
+                        <div key={key} className="flex items-center gap-2">
+                          <label className="w-40 text-xs text-gray-700" title={`Expected: ${ret}`}>
+                            {label}
+                          </label>
+                          {formData.use_bucket_strategy && bucketBreakdown ? (
+                            <input
+                              type="text"
+                              inputMode="decimal"
+                              autoComplete="off"
+                              value={
+                                stockWithinPctDrafts[key] ??
+                                formatWithinStockPctDisplay(key as keyof AssetAllocation)
+                              }
+                              onFocus={() => {
+                                const k = key as keyof AssetAllocation;
+                                setStockWithinPctDrafts(d => ({
+                                  ...d,
+                                  [k]: d[k as string] ?? formatWithinStockPctDisplay(k),
+                                }));
+                              }}
+                              onChange={e =>
+                                setStockWithinPctDrafts(d => ({
+                                  ...d,
+                                  [key]: e.target.value,
+                                }))
+                              }
+                              onBlur={() => commitWithinStockPctDraft(key as keyof AssetAllocation)}
+                              className="w-16 px-2 py-1 border border-gray-300 rounded-md text-sm"
+                            />
+                          ) : (
+                            <input
+                              type="number"
+                              value={formData.asset_allocation[key as keyof AssetAllocation]}
+                              onChange={e =>
+                                handleAllocationChange(key as keyof AssetAllocation, e.target.value)
+                              }
+                              className="w-16 px-2 py-1 border border-gray-300 rounded-md text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              min={0}
+                              max={100}
+                              step={0.01}
+                            />
+                          )}
+                          <span className="text-xs text-gray-400">%</span>
+                        </div>
+                      )
+                    )}
+                  </div>
+                </div>
+
+                {/* Commodities */}
+                <div className="mb-3">
+                  <h4 className="text-sm font-medium text-gray-600 mb-2">Commodities</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[{ key: 'gold', label: 'Gold (GLD)', return: '5.0%' }].map(
                       ({ key, label, return: ret }) => (
                         <div key={key} className="flex items-center gap-2">
                           <label className="w-40 text-xs text-gray-700" title={`Expected: ${ret}`}>

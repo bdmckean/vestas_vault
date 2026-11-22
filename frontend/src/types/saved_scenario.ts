@@ -6,6 +6,7 @@ export interface AssetAllocation {
   developed_markets: string; // VEA - Vanguard FTSE Developed Markets
   emerging_markets: string; // VWO - Vanguard FTSE Emerging Markets
   reits: string; // VNQ - Vanguard Real Estate ETF
+  gold: string; // GLD - SPDR Gold Shares
   bonds: string; // BND - Vanguard Total Bond Market
   short_term_treasuries: string; // VGSH - Vanguard Short-Term Treasury
   intermediate_term_treasuries: string; // VGIT - Vanguard Intermediate-Term Treasury
@@ -175,6 +176,7 @@ export const DEFAULT_ASSET_ALLOCATION: AssetAllocation = {
   developed_markets: '10',
   emerging_markets: '5',
   reits: '0',
+  gold: '0',
   bonds: '10',
   short_term_treasuries: '5',
   intermediate_term_treasuries: '3',
@@ -199,6 +201,7 @@ export const SCENARIO_ASSET_CLASS_INFO: Record<
   developed_markets: { label: 'Developed Markets', ticker: 'VEA', expectedReturn: 6.5 },
   emerging_markets: { label: 'Emerging Markets', ticker: 'VWO', expectedReturn: 8.0 },
   reits: { label: 'REITs', ticker: 'VNQ', expectedReturn: 9.5 },
+  gold: { label: 'Gold', ticker: 'GLD', expectedReturn: 5.0 },
   bonds: { label: 'Total Bond Market', ticker: 'BND', expectedReturn: 4.5 },
   short_term_treasuries: { label: 'Short-Term Treasury', ticker: 'VGSH', expectedReturn: 4.0 },
   intermediate_term_treasuries: {

@@ -16,6 +16,7 @@ const ASSET_CLASS_OPTIONS: AssetClass[] = [
   'international_small_cap_value',
   'developed_markets',
   'emerging_markets',
+  'gold',
   'bonds',
   'short_term_treasuries',
   'intermediate_term_treasuries',
@@ -140,7 +141,13 @@ export function PortfolioPage() {
   };
 
   const handleDelete = async (holding: Holding) => {
-    if (!window.confirm(`Delete ${ASSET_CLASS_LABELS[holding.asset_class]} holding of ${formatCurrency(holding.amount)}?`)) {
+    if (
+      !window.confirm(
+        `Delete ${ASSET_CLASS_LABELS[holding.asset_class]} holding of ${formatCurrency(
+          holding.amount
+        )}?`
+      )
+    ) {
       return;
     }
 
@@ -162,10 +169,8 @@ export function PortfolioPage() {
   }
 
   const totalPortfolioValue = allocation ? parseFloat(allocation.total_portfolio_value) : 0;
-  const holdingsTotal = allocation?.by_account.reduce(
-    (sum, acc) => sum + parseFloat(acc.holdings_total),
-    0
-  ) || 0;
+  const holdingsTotal =
+    allocation?.by_account.reduce((sum, acc) => sum + parseFloat(acc.holdings_total), 0) || 0;
   const unallocated = totalPortfolioValue - holdingsTotal;
 
   return (
@@ -173,9 +178,7 @@ export function PortfolioPage() {
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-4xl font-bold text-gray-900">Portfolio Holdings</h1>
-          <p className="text-gray-600 mt-2">
-            Manage your investment holdings across all accounts.
-          </p>
+          <p className="text-gray-600 mt-2">Manage your investment holdings across all accounts.</p>
         </div>
         <button
           onClick={() => setShowAddForm(true)}
@@ -208,12 +211,19 @@ export function PortfolioPage() {
           <h2 className="text-lg font-semibold text-gray-700 mb-2">Allocated</h2>
           <p className="text-3xl font-bold text-green-600">{formatCurrency(holdingsTotal)}</p>
           <p className="text-sm text-gray-500 mt-1">
-            {totalPortfolioValue > 0 ? formatPercent((holdingsTotal / totalPortfolioValue) * 100) : '0%'} of portfolio
+            {totalPortfolioValue > 0
+              ? formatPercent((holdingsTotal / totalPortfolioValue) * 100)
+              : '0%'}{' '}
+            of portfolio
           </p>
         </div>
         <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-lg font-semibold text-gray-700 mb-2">Unallocated</h2>
-          <p className={`text-3xl font-bold ${unallocated > 0 ? 'text-orange-600' : 'text-gray-400'}`}>
+          <p
+            className={`text-3xl font-bold ${
+              unallocated > 0 ? 'text-orange-600' : 'text-gray-400'
+            }`}
+          >
             {formatCurrency(unallocated)}
           </p>
           <p className="text-sm text-gray-500 mt-1">
@@ -262,14 +272,19 @@ export function PortfolioPage() {
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Holdings by Account</h2>
         {allocation?.by_account && allocation.by_account.length > 0 ? (
           <div className="space-y-6">
-            {allocation.by_account.map((accountSummary) => (
-              <div key={accountSummary.account_id} className="border border-gray-200 rounded-lg p-4">
+            {allocation.by_account.map(accountSummary => (
+              <div
+                key={accountSummary.account_id}
+                className="border border-gray-200 rounded-lg p-4"
+              >
                 <div className="flex justify-between items-center mb-3">
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">{accountSummary.account_name}</h3>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      {accountSummary.account_name}
+                    </h3>
                     <p className="text-sm text-gray-500">
-                      Balance: {formatCurrency(accountSummary.account_balance)} |
-                      Allocated: {formatCurrency(accountSummary.holdings_total)}
+                      Balance: {formatCurrency(accountSummary.account_balance)} | Allocated:{' '}
+                      {formatCurrency(accountSummary.holdings_total)}
                       {parseFloat(accountSummary.difference) !== 0 && (
                         <span className="text-orange-600 ml-2">
                           ({formatCurrency(accountSummary.difference)} unallocated)
@@ -292,18 +307,32 @@ export function PortfolioPage() {
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50">
                         <tr>
-                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Asset Class</th>
-                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Ticker</th>
-                          <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Amount</th>
-                          <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">%</th>
-                          <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                            Asset Class
+                          </th>
+                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                            Ticker
+                          </th>
+                          <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">
+                            Amount
+                          </th>
+                          <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">
+                            %
+                          </th>
+                          <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">
+                            Actions
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200">
-                        {accountSummary.holdings.map((holding) => (
+                        {accountSummary.holdings.map(holding => (
                           <tr key={holding.id} className="hover:bg-gray-50">
                             <td className="px-3 py-2">
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${ASSET_CLASS_COLORS[holding.asset_class]}`}>
+                              <span
+                                className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  ASSET_CLASS_COLORS[holding.asset_class]
+                                }`}
+                              >
                                 {ASSET_CLASS_LABELS[holding.asset_class]}
                               </span>
                             </td>
@@ -336,7 +365,9 @@ export function PortfolioPage() {
                     </table>
                   </div>
                 ) : (
-                  <p className="text-gray-500 text-sm italic">No holdings configured for this account</p>
+                  <p className="text-gray-500 text-sm italic">
+                    No holdings configured for this account
+                  </p>
                 )}
               </div>
             ))}
@@ -359,17 +390,15 @@ export function PortfolioPage() {
               {/* Account Selection */}
               {!editingHolding && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Account *
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Account *</label>
                   <select
                     value={selectedAccountId}
-                    onChange={(e) => setSelectedAccountId(e.target.value)}
+                    onChange={e => setSelectedAccountId(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   >
                     <option value="">Select account...</option>
-                    {accounts?.map((account) => (
+                    {accounts?.map(account => (
                       <option key={account.id} value={account.id}>
                         {account.name} ({formatCurrency(account.balance)})
                       </option>
@@ -385,11 +414,13 @@ export function PortfolioPage() {
                 </label>
                 <select
                   value={formData.asset_class}
-                  onChange={(e) => setFormData({ ...formData, asset_class: e.target.value as AssetClass })}
+                  onChange={e =>
+                    setFormData({ ...formData, asset_class: e.target.value as AssetClass })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 >
-                  {ASSET_CLASS_OPTIONS.map((ac) => (
+                  {ASSET_CLASS_OPTIONS.map(ac => (
                     <option key={ac} value={ac}>
                       {ASSET_CLASS_LABELS[ac]}
                     </option>
@@ -405,7 +436,7 @@ export function PortfolioPage() {
                 <input
                   type="text"
                   value={formData.ticker}
-                  onChange={(e) => setFormData({ ...formData, ticker: e.target.value.toUpperCase() })}
+                  onChange={e => setFormData({ ...formData, ticker: e.target.value.toUpperCase() })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="e.g., VTSAX, VTI"
                   maxLength={20}
@@ -414,15 +445,15 @@ export function PortfolioPage() {
 
               {/* Amount */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Amount *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Amount *</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                    $
+                  </span>
                   <input
                     type="number"
                     value={formData.amount}
-                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                    onChange={e => setFormData({ ...formData, amount: e.target.value })}
                     className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="0.00"
                     min="0"
@@ -440,7 +471,7 @@ export function PortfolioPage() {
                 <input
                   type="text"
                   value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  onChange={e => setFormData({ ...formData, notes: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Additional notes"
                 />
@@ -463,8 +494,8 @@ export function PortfolioPage() {
                   {createMutation.isLoading || updateMutation.isLoading
                     ? 'Saving...'
                     : editingHolding
-                    ? 'Update'
-                    : 'Add Holding'}
+                      ? 'Update'
+                      : 'Add Holding'}
                 </button>
               </div>
             </form>
@@ -479,7 +510,9 @@ export function PortfolioPage() {
           <li>Add holdings to track your specific investments within each account</li>
           <li>The sum of holdings should match the account balance</li>
           <li>Asset allocation is used for scenario modeling and projections</li>
-          <li>You can add multiple holdings of the same asset class (e.g., multiple US stock funds)</li>
+          <li>
+            You can add multiple holdings of the same asset class (e.g., multiple US stock funds)
+          </li>
         </ul>
       </div>
     </div>

@@ -6,6 +6,7 @@ export type AssetClass =
   | 'developed_markets'
   | 'emerging_markets'
   | 'reits'
+  | 'gold'
   | 'bonds'
   | 'short_term_treasuries'
   | 'intermediate_term_treasuries'
@@ -70,6 +71,7 @@ export const ASSET_CLASS_LABELS: Record<AssetClass, string> = {
   developed_markets: 'Developed Markets',
   emerging_markets: 'Emerging Markets',
   reits: 'REITs',
+  gold: 'Gold',
   bonds: 'Bonds',
   short_term_treasuries: 'Short-Term Treasuries',
   intermediate_term_treasuries: 'Intermediate Treasuries',
@@ -86,6 +88,7 @@ export const ASSET_CLASS_COLORS: Record<AssetClass, string> = {
   developed_markets: 'bg-cyan-100 text-cyan-800',
   emerging_markets: 'bg-orange-100 text-orange-800',
   reits: 'bg-red-100 text-red-800',
+  gold: 'bg-amber-100 text-amber-800',
   bonds: 'bg-yellow-100 text-yellow-800',
   short_term_treasuries: 'bg-lime-100 text-lime-800',
   intermediate_term_treasuries: 'bg-amber-100 text-amber-800',

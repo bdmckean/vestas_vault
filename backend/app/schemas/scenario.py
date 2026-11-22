@@ -28,6 +28,9 @@ class AssetAllocation(BaseModel):
     # Real Estate
     reits: Decimal = Field(0, ge=0, le=100, description="REITs (VNQ)")
 
+    # Commodities
+    gold: Decimal = Field(0, ge=0, le=100, description="Gold (GLD)")
+
     # Fixed Income
     bonds: Decimal = Field(0, ge=0, le=100, description="Total Bond Market (BND)")
     short_term_treasuries: Decimal = Field(
@@ -52,6 +55,7 @@ class AssetAllocation(BaseModel):
             + self.developed_markets
             + self.emerging_markets
             + self.reits
+            + self.gold
             + self.bonds
             + self.short_term_treasuries
             + self.intermediate_term_treasuries

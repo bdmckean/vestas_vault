@@ -164,6 +164,7 @@ class RetirementScenarioService:
             str(by_asset_class_pct.get("emerging_markets", 0))
         )
         asset_allocation.reits = Decimal(str(by_asset_class_pct.get("reits", 0)))
+        asset_allocation.gold = Decimal(str(by_asset_class_pct.get("gold", 0)))
         asset_allocation.bonds = Decimal(str(by_asset_class_pct.get("bonds", 0)))
         asset_allocation.short_term_treasuries = Decimal(
             str(by_asset_class_pct.get("short_term_treasuries", 0))
@@ -187,6 +188,7 @@ class RetirementScenarioService:
                 asset_allocation.developed_markets,
                 asset_allocation.emerging_markets,
                 asset_allocation.reits,
+                asset_allocation.gold,
                 asset_allocation.bonds,
                 asset_allocation.short_term_treasuries,
                 asset_allocation.intermediate_term_treasuries,
@@ -206,6 +208,7 @@ class RetirementScenarioService:
             asset_allocation.developed_markets *= factor
             asset_allocation.emerging_markets *= factor
             asset_allocation.reits *= factor
+            asset_allocation.gold *= factor
             asset_allocation.bonds *= factor
             asset_allocation.short_term_treasuries *= factor
             asset_allocation.intermediate_term_treasuries *= factor
@@ -724,6 +727,8 @@ class RetirementScenarioService:
                     "emerging_markets": Decimal("8.0"),  # VWO
                     # Real estate (treated as part of growth bucket for now)
                     "reits": Decimal("9.5"),  # VNQ
+                    # Commodities
+                    "gold": Decimal("5.0"),  # GLD
                     # Other placeholder equity-like bucket
                     "other": Decimal("5.0"),
                 }
@@ -735,6 +740,7 @@ class RetirementScenarioService:
                     "developed_markets": Decimal("8.0"),
                     "emerging_markets": Decimal("9.0"),
                     "reits": Decimal("9.35"),
+                    "gold": Decimal("5.0"),
                     "other": Decimal("5.0"),
                 }
 
@@ -1632,6 +1638,8 @@ class RetirementScenarioService:
             "emerging_markets": Decimal("8.0"),  # VWO
             # Real Estate
             "reits": Decimal("9.5"),  # VNQ - 10-year forecast
+            # Commodities
+            "gold": Decimal("5.0"),  # GLD
             # Fixed Income
             "bonds": Decimal("4.5"),  # BND
             "short_term_treasuries": Decimal("4.0"),  # VGSH
@@ -1663,6 +1671,8 @@ class RetirementScenarioService:
             "emerging_markets": Decimal("9.0"),
             # Real Estate
             "reits": Decimal("9.35"),
+            # Commodities
+            "gold": Decimal("5.0"),
             # Fixed Income
             "bonds": Decimal("4.5"),
             "short_term_treasuries": Decimal("4.0"),

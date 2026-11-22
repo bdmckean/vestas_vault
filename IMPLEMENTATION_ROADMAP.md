@@ -435,6 +435,8 @@ After implementation, update these files:
 
 **Overall Progress:** 0 / 54 tasks complete (0%)
 
+> **Status note (2026-10-17):** this tracker is stale. Code review shows Phase 1 (account-type segregation and the pretax → taxable → cash → Roth withdrawal order) and Phase 2 (bucket strategy) are implemented in `retirement_scenario_service.py`. Phases 3 (Roth conversions) and 4 (RMDs) have no code (no hits for RMD, IRMAA or Roth conversion in `backend/app`). Individual task checkboxes have not been re-verified.
+
 ### Phase Completion Status
 
 - [ ] Phase 1: Account Type Segregation (0/6)
@@ -467,3 +469,49 @@ After implementation, update these files:
 - [ ] Q: Should IRMAA calculations use current year MAGI or prior year?
 - [ ] Q: Need to decide on cost basis tracking strategy for taxable accounts
 
+
+
+---
+
+## Phase 10: Competitive gaps vs Boldin (added 2026-10-17)
+
+**Goal:** Close the feature gaps found by comparing against boldin.com (PlannerPlus, $144/year). Source: Boldin's marketing pages and search snippets, so details such as account linking are unverified.
+
+**Already at parity (no work):** spouse Social Security, Monte Carlo (with baseline overlay), saved scenarios and **side-by-side comparison**, withdrawal sequencing, account-type segregation, bucket strategy, federal and state tax brackets.
+
+### Priority order
+
+Roth conversion depends on RMDs, IRMAA and withdrawal sequencing, so those come first. Phases 3 and 4 above already cover Roth conversions and RMDs. Do them first, then:
+
+- [ ] **10.1** RMD calculations (see Phase 4).
+- [ ] **10.2** Medicare Part B/D premiums and IRMAA surcharges by MAGI, with brackets that index forward.
+- [ ] **10.3** Roth conversion explorer (see Phase 3), with four strategies: maximize estate value, minimize lifetime taxes, convert to an income-tax threshold, convert to the IRMAA threshold. Show the year-by-year tax impact.
+- [ ] **10.4** Withdrawal sequencing is set (pretax → taxable → cash → Roth). Make it configurable per scenario.
+
+### After the first tester round
+
+- [ ] **10.5** Healthcare and long-term care: separate medical expenses with their own inflation rate (PRD US-4.7 and US-4.8), plus long-term-care cost events.
+- [ ] **10.6** Real estate and debt: primary residence, rental property, mortgage, sale or downsize (see `REAL_ESTATE_DECISIONS.md`). Add other loans after that.
+- [ ] **10.7** Richer comparison view: the table covers SS start age, final portfolio, years to depletion and total SS. Add charts, taxes paid, and Monte Carlo success rate per scenario.
+- [ ] **10.8** More charts (Boldin has 36+): withdrawals by account type, taxes over time, distance to the next bracket, income vs spending, portfolio by account type. This overlaps the time-series visualizations listed as missing in the README.
+- [ ] **10.9** Goals and budgeting: goal tracking and prioritization, budget planning.
+
+### Spending phases (go-go / slow-go / no-go)
+
+- [ ] **10.13** Age-phased retirement spending. Boldin supports phases only as manual entry, with no default curve, so a research-based preset is a differentiator. Depends on 10.5 (healthcare) for the healthcare category. Do it before final tuning of 10.3 (Roth explorer), because phased withdrawals change bracket usage.
+  - [ ] **10.13.1** Schema: per-scenario spending phases (label, start age, multiplier on spending in today's dollars). Replace `spending_reduction_percent` and `spending_reduction_start_year`, and migrate existing scenarios to a one-phase equivalent.
+  - [ ] **10.13.2** Split spending into essentials, discretionary and healthcare, each with its own phase multipliers. Healthcare gets its own inflation rate (PRD US-4.7 and US-4.8) and rises in the no-go phase.
+  - [ ] **10.13.3** Presets: "Flat" (today's behavior, the default so existing results don't change), "Research-based" (Blanchett smile: real spending about -1%/yr in the first decade, -2%/yr in the second, -1%/yr in the third, healthcare rising after about 85), "Conservative" (no decline). Default boundaries about ages 75 and 85, all editable.
+  - [ ] **10.13.4** Projection loop in `retirement_scenario_service.py` applies the phase multipliers to the variable portion per category. Phases are keyed to the primary's age. Later, add a survivor step-down when one spouse dies.
+  - [ ] **10.13.5** **Verify first:** `monte_carlo_data_prep_service.py` takes `yearly_withdrawals` from the scenario and then applies sampled inflation again (`base_withdrawal * (1 + infl)^(year-1)`). Check whether the scenario withdrawals are already inflated, which would double-count inflation, and fix it before relying on phased spending in Monte Carlo.
+  - [ ] **10.13.6** UI: phase editor on the scenario page, with a spending-over-time chart.
+  - [ ] **10.13.7** Show flat versus phased in the comparison view, including the probability-of-success difference. Add a long-term-care shock to the no-go phase as a stress test.
+  - [ ] **10.13.8** Tests: migration of existing scenarios gives identical results, preset values, phase boundaries, and Monte Carlo consistency.
+
+  Sources: Stein, *The Prosperous Retirement*; Blanchett, "Exploring the Retirement Consumption Puzzle" (FPA, 2014); EBRI spending-by-age research.
+
+### Later, product-level
+
+- [ ] **10.10** AI assistant that answers questions from the user's own plan, with alerts for plan errors and opportunities.
+- [ ] **10.11** Free standalone calculators (retirement, Roth conversion, annuity) as an acquisition funnel.
+- [ ] **10.12** Multi-user accounts and invite-only testers (see `PLATFORM_V_INTEGRATION_CHECKLIST.md`). This blocks any outside tester.
